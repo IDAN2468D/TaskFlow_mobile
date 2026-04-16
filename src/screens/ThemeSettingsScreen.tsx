@@ -1,0 +1,137 @@
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChevronRight, Palette, Check, Sparkles } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+
+// define a type for exactly 2 or more colors 
+type ThemeOption = {
+  id: string;
+  name: string;
+  subtitle: string;
+  activeColors: readonly [string, string, ...string[]];
+  badge?: string;
+};
+
+const THEMES: ThemeOption[] = [
+  { id: 'obsidian', name: 'Nordic Indigo', subtitle: 'איזון שקט של כחול עמוק ואופל', activeColors: ['#0c0c0e', '#818cf8'], badge: 'נבחר' },
+  { id: 'emerald', name: 'Spring Sage', subtitle: 'ירוק טבעי ומרגיע לעבודה ממושכת', activeColors: ['#061a14', '#4ade80'] },
+  { id: 'midnight', name: 'Lavender Mist', subtitle: 'סגול רך וחלבי למחשבה יצירתית', activeColors: ['#0f0c1d', '#c084fc'] },
+  { id: 'amber', name: 'Golden Dusk', subtitle: 'אווירה חמימה ושקטה לסוף היום', activeColors: ['#1a1106', '#fbbf24'] },
+];
+
+import { useTheme, ThemeId } from '../context/ThemeContext';
+
+export default function ThemeSettingsScreen() {
+  const { themeId, setTheme, colors: themeColors } = useTheme();
+
+  const handleThemeChange = async (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await setTheme(id as ThemeId);
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: themeColors.background }}>
+      <SafeAreaView className="flex-1" edges={['top']}>
+        {/* Header */}
+        <View className="flex-row-reverse items-center justify-between px-6 pt-4 pb-4">
+          <TouchableOpacity 
+            onPress={() => router.back()}
+            className="w-12 h-12 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-md"
+          >
+            <ChevronRight color="#fff" size={24} />
+          </TouchableOpacity>
+          <Text className="text-[22px] font-extrabold text-white tracking-widest">התאמה אישית</Text>
+          <View className="w-12 h-12" />
+        </View>
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 60 }}>
+          
+          <MotiView
+             from={{ opacity: 0, translateY: -20 }}
+             animate={{ opacity: 1, translateY: 0 }}
+             transition={{ type: 'spring', damping: 20 }}
+             className="mb-10 items-end relative"
+          >
+            <View style={{ backgroundColor: themeColors.primary + '33' }} className="absolute right-0 -top-10 w-32 h-32 rounded-full blur-[40px]" />
+            <View className="flex-row-reverse items-center gap-4 mb-3">
+              <View style={{ backgroundColor: themeColors.primary + '1A', borderColor: themeColors.primary + '4D' }} className="w-14 h-14 rounded-[20px] items-center justify-center border">
+                <Palette color={themeColors.primary} size={28} />
+              </View>
+              <Text className="text-white text-[32px] font-extrabold text-right tracking-tight shadow-md">צבעי מערכת</Text>
+            </View>
+            <Text className="text-slate-400 text-[15px] text-right font-medium leading-[24px]">
+              בחר את הסגנון הויזואלי שיעניק לך את חווית העבודה המושלמת. המערכת תתאים את עצמה באופן מיידי לבחירתך.
+            </Text>
+          </MotiView>
+
+          <View>
+            {THEMES.map((theme, i) => (
+              <MotiView 
+                key={theme.id}
+                from={{ opacity: 0, translateX: 50, scale: 0.95 }}
+                animate={{ opacity: 1, translateX: 0, scale: 1 }}
+                transition={{ delay: i * 150 + 100, type: 'spring', damping: 20 }}
+                className="mb-5"
+              >
+                <TouchableOpacity 
+                  activeOpacity={0.8}
+                  onPress={() => handleThemeChange(theme.id)}
+                  style={{ borderColor: themeId === theme.id ? themeColors.primary : 'rgba(255,255,255,0.05)' }}
+                  className={`bg-black/40 rounded-[28px] border overflow-hidden p-5 shadow-2xl relative`}
+                >
+                  <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
+                  
+                  {themeId === theme.id && (
+                     <View style={{ backgroundColor: themeColors.primary + '1A' }} className="absolute inset-0" />
+                  )}
+
+                  <View className="flex-row-reverse items-center justify-between">
+                    {/* Theme Gradient preview */}
+                    <View className="w-16 h-16 rounded-[20px] overflow-hidden border-2 border-white/10 shadow-lg shadow-black/50 ml-5 relative">
+                      <LinearGradient 
+                        colors={theme.activeColors as [string, string, ...string[]]} 
+                        className="flex-1"
+                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                      />
+                      {themeId === theme.id && (
+                        <View className="absolute inset-0 items-center justify-center bg-black/20">
+                           <Sparkles size={18} color="#fff" />
+                        </View>
+                      )}
+                    </View>
+                    
+                    <View className="flex-1 items-end">
+                      <View className="flex-row-reverse items-center gap-2 mb-1">
+                        <Text className="text-white text-[19px] font-extrabold text-right tracking-tight">{theme.name}</Text>
+                        {themeId === theme.id && (
+                          <View style={{ backgroundColor: themeColors.primary + '33', borderColor: themeColors.primary + '4D' }} className="px-2 py-0.5 rounded-full border">
+                            <Text style={{ color: themeColors.primary }} className="text-[10px] font-extrabold uppercase">נבחר</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="text-slate-400 text-[13px] font-medium text-right leading-[18px]">{theme.subtitle}</Text>
+                    </View>
+
+                    <View 
+                      style={{ 
+                        backgroundColor: themeId === theme.id ? themeColors.primary : 'transparent', 
+                        borderColor: themeId === theme.id ? themeColors.primary : 'rgba(255,255,255,0.1)' 
+                      }} 
+                      className={`w-7 h-7 rounded-full items-center justify-center border-2 mr-2`}
+                    >
+                      {themeId === theme.id && <Check size={14} color="#fff" strokeWidth={3} />}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </MotiView>
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
