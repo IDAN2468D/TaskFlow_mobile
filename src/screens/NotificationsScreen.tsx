@@ -1,140 +1,170 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Switch, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, Bell, Zap, CalendarDays, BrainCircuit } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight, Bell, Zap, CalendarDays, BrainCircuit, Activity, ShieldCheck, Fingerprint, Cpu } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { useTheme } from '../context/ThemeContext';
 
 export default function NotificationsScreen() {
-  // const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const [taskReminders, setTaskReminders] = useState(true);
   const [aiInsights, setAiInsights] = useState(true);
   const [morningBriefing, setMorningBriefing] = useState(false);
+  const [securityAlerts, setSecurityAlerts] = useState(true);
 
   return (
     <View className="flex-1 bg-obsidian">
-      {/* Background ambient glow */}
-      <LinearGradient
-        colors={['rgba(99, 102, 241, 0.08)', 'transparent']}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 500 }}
-      />
-
+      <StatusBar barStyle="light-content" />
       <SafeAreaView className="flex-1" edges={['top']}>
-        {/* Premium Header */}
-        <View className="flex-row-reverse items-center justify-between px-6 pt-6 pb-4 relative z-10">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-12 h-12 bg-white/5 rounded-[18px] items-center justify-center border border-white/10 backdrop-blur-xl shadow-lg"
-          >
-            <ChevronRight color="#fff" size={24} strokeWidth={2.5} />
-          </TouchableOpacity>
-          <Text className="text-[26px] font-black text-white tracking-tighter text-right">התראות חכמות</Text>
-          <View className="w-12 h-12" />
-        </View>
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 60 }}>
-
-          <MotiView
-            from={{ opacity: 0, translateY: 20, scale: 0.95 }}
-            animate={{ opacity: 1, translateY: 0, scale: 1 }}
-            transition={{ type: 'spring', damping: 18 }}
-            className="relative bg-indigo-600 p-8 rounded-[36px] mb-10 overflow-hidden shadow-2xl flex-row-reverse items-center justify-between"
-          >
-            <LinearGradient colors={['#6366f1', '#4338ca']} className="absolute inset-0" />
-            <View className="flex-1 mr-4 z-10">
-              <View className="flex-row-reverse items-center gap-2 mb-2">
-                <Text className="text-indigo-100 text-[12px] font-black uppercase tracking-widest text-right">מנוע AI פעיל</Text>
-                <MotiView 
-                  animate={{ opacity: [0.4, 1, 0.4] }} 
-                  transition={{ loop: true, duration: 2000 }}
-                  className="w-2 h-2 bg-emerald-400 rounded-full" 
-                />
+        {/* Standardized Obsidian Header */}
+        <MotiView
+          from={{ opacity: 0, translateY: -10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          className="px-6 pt-4 pb-6 border-b border-white/5"
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-4">
+              <TouchableOpacity 
+                onPress={() => {
+                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                   router.back();
+                }}
+                className="w-12 h-12 rounded-outer bg-surface-low justify-center items-center border border-white/5"
+              >
+                <ChevronRight size={24} color="#fff" />
+              </TouchableOpacity>
+              <View className="items-start">
+                <View className="flex-row items-center gap-1.5 mb-0.5">
+                   <View className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />
+                   <Text className="text-text-dim text-[10px] font-black uppercase tracking-[2px]">COMM_CENTER_ACTIVE</Text>
+                </View>
+                <Text className="text-text-main text-2xl font-black tracking-tighter">התראות חכמות</Text>
               </View>
-              <Text className="text-white text-[24px] font-black text-right leading-none tracking-tighter mb-3">מערכת פוש חכמה</Text>
-              <Text className="text-indigo-100/80 text-[15px] text-right font-bold leading-[22px]">
-                המערכת לומדת את דפוסי הקשב שלך ומצמצמת הסחות דעת בזמן עבודה.
-              </Text>
             </View>
-            <View className="w-20 h-20 bg-white/20 rounded-[24px] items-center justify-center border border-white/30 z-10">
-              <BrainCircuit color="#fff" size={36} />
+            
+            <View className="w-10 h-10 rounded-inner bg-surface-mid items-center justify-center border border-white/5">
+               <Bell size={20} color={themeColors.primary} />
             </View>
+          </View>
+        </MotiView>
+
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+          className="flex-1"
+        >
+          {/* AI Strategy Banner - High Density Surface */}
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            className="bg-surface-low p-6 rounded-outer mb-8 border border-primary/20 shadow-2xl overflow-hidden"
+          >
+            <View className="absolute top-0 end-0 w-32 h-32 bg-primary/5 rounded-full -me-16 -mt-16" />
+            
+            <View className="flex-row items-center gap-3 mb-4">
+              <View className="w-10 h-10 bg-primary/20 rounded-inner items-center justify-center border border-primary/30">
+                <BrainCircuit color={themeColors.primary} size={22} />
+              </View>
+              <View className="items-start">
+                <Text className="text-primary text-[10px] font-black uppercase tracking-[2px]">מנוע AI פעיל</Text>
+                <Text className="text-text-main text-xl font-black tracking-tight">אסטרטגיית קשב</Text>
+              </View>
+            </View>
+            <Text className="text-text-dim text-sm font-bold leading-5 opacity-80">
+              המערכת לומדת את דפוסי הקשב שלך ומצמצמת הסחות דעת בזמן עבודה אינטנסיבית.
+            </Text>
           </MotiView>
 
-          <View className="gap-6">
-            {/* Setting Item 1 */}
-            <MotiView from={{ opacity: 0, translateX: 50 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 150, type: 'spring', damping: 20 }}>
-              <View className="bg-[#121214]/60 rounded-[32px] border border-white/10 flex-row-reverse items-center justify-between p-6 shadow-2xl relative overflow-hidden">
-                <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-                <View className="flex-row-reverse items-center flex-1 gap-4 z-10">
-                  <View className="w-14 h-14 bg-blue-500/10 rounded-[22px] items-center justify-center border border-blue-500/20 shadow-lg shadow-blue-500/5">
-                    <CalendarDays color="#60a5fa" size={26} />
-                  </View>
-                  <View className="flex-1 items-end">
-                    <Text className="text-white text-[19px] font-black tracking-tight text-right mb-1">תזכורות למשימות</Text>
-                    <Text className="text-slate-500 text-[14px] font-bold text-right leading-[18px]">התראות חמות על דדליינים</Text>
-                  </View>
-                </View>
-                <Switch
-                  value={taskReminders}
-                  onValueChange={setTaskReminders}
-                  trackColor={{ false: '#27272a', true: '#4f46e5' }}
-                  thumbColor="#fff"
-                  style={{ transform: [{ scale: 1.2 }] }}
-                />
-              </View>
-            </MotiView>
-
-            {/* Setting Item 2 */}
-            <MotiView from={{ opacity: 0, translateX: 50 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 300, type: 'spring', damping: 20 }}>
-              <View className="bg-[#121214]/60 rounded-[32px] border border-white/10 flex-row-reverse items-center justify-between p-6 shadow-2xl relative overflow-hidden">
-                <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-                <View className="flex-row-reverse items-center flex-1 gap-4 z-10">
-                  <View className="w-14 h-14 bg-indigo-500/10 rounded-[22px] items-center justify-center border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
-                    <Zap color="#818cf8" size={26} />
-                  </View>
-                  <View className="flex-1 items-end">
-                    <Text className="text-white text-[19px] font-black tracking-tight text-right mb-1">תובנות סוכן AI</Text>
-                    <Text className="text-slate-500 text-[14px] font-bold text-right leading-[18px]">רעיונות אוטומטיים לפירוק משימה</Text>
-                  </View>
-                </View>
-                <Switch
-                  value={aiInsights}
-                  onValueChange={setAiInsights}
-                  trackColor={{ false: '#27272a', true: '#4f46e5' }}
-                  thumbColor="#fff"
-                  style={{ transform: [{ scale: 1.2 }] }}
-                />
-              </View>
-            </MotiView>
-
-            {/* Setting Item 3 */}
-            <MotiView from={{ opacity: 0, translateX: 50 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 450, type: 'spring', damping: 20 }}>
-              <View className="bg-[#121214]/60 rounded-[32px] border border-white/10 flex-row-reverse items-center justify-between p-6 shadow-2xl relative overflow-hidden">
-                <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-                <View className="flex-row-reverse items-center flex-1 gap-4 z-10">
-                  <View className="w-14 h-14 bg-emerald-500/10 rounded-[22px] items-center justify-center border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
-                    <Bell color="#34d399" size={26} />
-                  </View>
-                  <View className="flex-1 items-end">
-                    <Text className="text-white text-[19px] font-black tracking-tight text-right mb-1">תדריך בוקר</Text>
-                    <Text className="text-slate-500 text-[14px] font-bold text-right leading-[18px]">ריכוז יעדים בממשק אחד (08:00)</Text>
-                  </View>
-                </View>
-                <Switch
-                  value={morningBriefing}
-                  onValueChange={setMorningBriefing}
-                  trackColor={{ false: '#27272a', true: '#4f46e5' }}
-                  thumbColor="#fff"
-                  style={{ transform: [{ scale: 1.2 }] }}
-                />
-              </View>
-            </MotiView>
+          <View className="flex-row items-center gap-3 mb-6 px-1">
+            <Text className="text-text-dim text-[10px] font-black uppercase tracking-[3px]">הגדרות ליבה</Text>
+            <View className="h-[1px] flex-1 bg-white/10" />
           </View>
 
-        </ScrollView>
+          <View className="gap-y-4">
+            {[
+              { 
+                title: "תזכורות למשימות", 
+                subtitle: "התראות חמות על דדליינים", 
+                icon: <CalendarDays color="#3b82f6" size={20} />, 
+                value: taskReminders, 
+                setValue: setTaskReminders,
+                color: '#3b82f6'
+              },
+              { 
+                title: "תובנות סוכן AI", 
+                subtitle: "רעיונות אוטומטיים לפירוק משימה", 
+                icon: <Zap color="#6366f1" size={20} />, 
+                value: aiInsights, 
+                setValue: setAiInsights,
+                color: '#6366f1'
+              },
+              { 
+                title: "תדריך בוקר", 
+                subtitle: "ריכוז יעדים בממשק אחד (08:00)", 
+                icon: <Activity color="#10b981" size={20} />, 
+                value: morningBriefing, 
+                setValue: setMorningBriefing,
+                color: '#10b981'
+              },
+              { 
+                title: "אבטחה ופרטיות", 
+                subtitle: "התראות על סנכרון וגישה", 
+                icon: <ShieldCheck color="#f43f5e" size={20} />, 
+                value: securityAlerts, 
+                setValue: setSecurityAlerts,
+                color: '#f43f5e'
+              }
+            ].map((item, idx) => (
+              <MotiView 
+                key={idx}
+                from={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 100, type: 'timing', duration: 400 }}
+              >
+                <View className="bg-surface-low rounded-outer flex-row items-center justify-between p-4 border border-white/5 shadow-sm">
+                  <View className="flex-row items-center flex-1 gap-4">
+                    <View 
+                      style={{ backgroundColor: item.color + '15' }} 
+                      className="w-11 h-11 rounded-inner items-center justify-center border border-white/5"
+                    >
+                      {item.icon}
+                    </View>
+                    <View className="flex-1 items-start">
+                      <Text className="text-text-main text-lg font-black tracking-tight">{item.title}</Text>
+                      <Text className="text-text-dim text-[11px] font-bold opacity-60 mt-0.5">{item.subtitle}</Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={item.value}
+                    onValueChange={(val) => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      item.setValue(val);
+                    }}
+                    trackColor={{ false: '#1C1C1E', true: themeColors.primary }}
+                    thumbColor="#fff"
+                    style={{ transform: [{ scale: Platform.OS === 'ios' ? 0.75 : 0.9 }] }}
+                  />
+                </View>
+              </MotiView>
+            ))}
+          </View>
 
+          {/* Footer Branding */}
+          <View className="mt-16 items-center opacity-30 pb-20">
+            <View className="w-10 h-10 rounded-inner bg-surface-low items-center justify-center border border-white/10 mb-4">
+                <Fingerprint size={18} color="#fff" />
+            </View>
+            <Cpu size={20} color="#fff" className="mb-3" />
+            <Text className="text-[9px] text-white font-black uppercase tracking-[5px] text-center leading-4">
+              TASKFLOW_PROTOCOL v2.1{"\n"}
+              ENCRYPTED_END_TO_END
+            </Text>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
+

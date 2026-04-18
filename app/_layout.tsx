@@ -7,6 +7,11 @@ import '../src/lib/interop';
 import '../src/styles/global.css';
 
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
+import { I18nManager } from 'react-native';
+
+// Force RTL for Hebrew
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 function RootLayoutContent() {
   const { colors } = useTheme();

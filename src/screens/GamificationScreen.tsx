@@ -1,14 +1,35 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator, InteractionManager } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  RefreshControl, 
+  ActivityIndicator, 
+  StatusBar,
+  Dimensions
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MotiView } from 'moti';
-import { LinearGradient } from 'expo-linear-gradient';
-import {
-  Trophy, Flame, Zap, Star, Target, TrendingUp, Lock,
-  CheckCircle2, Crown, Sparkles, Medal
+import { 
+  Trophy, 
+  ChevronRight, 
+  Flame, 
+  CheckCircle2, 
+  Zap, 
+  Lock,
+  Activity,
+  Cpu,
+  Sparkles,
+  ArrowUpRight
 } from 'lucide-react-native';
+import { MotiView } from 'moti';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
 import { taskService, GamificationProgress, GamificationAchievement } from '../services/taskService';
+import { executeOnIdle } from '../lib/performance';
+
+const { width } = Dimensions.get('window');
 
 export default function GamificationScreen() {
   const { colors: themeColors } = useTheme();
@@ -18,7 +39,7 @@ export default function GamificationScreen() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    InteractionManager.runAfterInteractions(() => setIsReady(true));
+    executeOnIdle(() => setIsReady(true));
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -44,357 +65,195 @@ export default function GamificationScreen() {
 
   if (!isReady || loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }} edges={['top']}>
-        <View className="flex-1 items-center justify-center">
-          <MotiView
-            from={{ opacity: 0.4, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1.1 }}
-            transition={{ loop: true, type: 'timing', duration: 800 }}
-          >
-            <Trophy size={48} color={themeColors.primary} />
-          </MotiView>
-          <Text className="text-white/50 mt-4 font-medium text-[13px]">טוען את ההתקדמות שלך&rlm;...</Text>
-        </View>
-      </SafeAreaView>
+      <View className="flex-1 justify-center items-center bg-obsidian">
+        <ActivityIndicator color={themeColors.primary} size="large" />
+        <Text className="text-text-dim mt-6 text-[10px] font-black uppercase tracking-[4px]">טוען הישגים</Text>
+      </View>
     );
   }
 
-  if (!data) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }} edges={['top']}>
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-white/50 text-[14px]">לא ניתן לטעון את המידע&rlm;</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (!data) return null;
 
   const { progress, level, progressToNextLevel, xpToNextLevel, achievements } = data;
   const unlockedCount = achievements.filter(a => a.unlocked).length;
   const totalCount = achievements.length;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }} edges={['top']}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={themeColors.primary}
-          />
-        }
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
-        {/* ─── Hero Card: Level & XP ─── */}
+    <View className="flex-1 bg-obsidian">
+      <StatusBar barStyle="light-content" />
+      
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        {/* Standardized Obsidian Header */}
         <MotiView
-          from={{ opacity: 0, translateY: -30 }}
+          from={{ opacity: 0, translateY: -10 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'spring', stiffness: 100 }}
-          className="mx-5 mt-4"
+          className="px-6 pt-4 pb-6 border-b border-white/5"
         >
-          <LinearGradient
-            colors={[themeColors.primary + '22', themeColors.secondary, themeColors.background]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="rounded-[28px] p-6 border border-white/10"
-          >
-            {/* Level Badge */}
-            <View className="items-center mb-5">
-              <MotiView
-                from={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 200, type: 'spring', stiffness: 150 }}
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-4">
+              <TouchableOpacity 
+                onPress={() => {
+                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                   router.back();
+                }}
+                className="w-12 h-12 rounded-outer bg-surface-low justify-center items-center border border-white/5"
               >
-                <View
-                  style={{ backgroundColor: themeColors.primary + '1A', borderColor: themeColors.primary + '44' }}
-                  className="w-24 h-24 rounded-full items-center justify-center border-2"
-                >
-                  <Text className="text-[44px]">{level.emoji}</Text>
+                <ChevronRight size={24} color="#fff" />
+              </TouchableOpacity>
+              <View className="items-start">
+                <View className="flex-row items-center gap-1.5 mb-0.5">
+                   <View className="w-1.5 h-1.5 rounded-full bg-primary" />
+                   <Text className="text-text-dim text-[10px] font-black uppercase tracking-[2px]">EVOLUTION_STREAM_ACTIVE</Text>
                 </View>
-              </MotiView>
-              <Text className="text-white font-black text-[22px] mt-3">{level.title}</Text>
-              <Text className="text-white/40 font-medium text-[13px]">רמה {level.level}</Text>
+                <Text className="text-text-main text-2xl font-black tracking-tighter">התקדמות אישית</Text>
+              </View>
+            </View>
+            
+            <View className="w-10 h-10 rounded-inner bg-surface-mid items-center justify-center border border-white/5">
+               <Trophy size={20} color={themeColors.primary} />
+            </View>
+          </View>
+        </MotiView>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={themeColors.primary} />
+          }
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+          className="flex-1"
+        >
+          {/* Level Progress */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-surface-low rounded-outer p-6 mb-8 mt-4 border border-white/5 shadow-2xl"
+          >
+            <View className="flex-row items-center gap-4 mb-6">
+              <View className="w-16 h-16 rounded-inner bg-surface-mid items-center justify-center border border-white/5 shadow-sm">
+                <Text className="text-4xl">{level.emoji}</Text>
+              </View>
+              <View className="items-start">
+                <Text className="text-text-main text-xl font-black tracking-tight">{level.title}</Text>
+                <Text className="text-primary text-xs font-black mt-1">רמה {level.level} • טייס מתקדם</Text>
+              </View>
             </View>
 
-            {/* XP Progress Bar */}
-            <View className="mb-4">
-              <View className="flex-row-reverse justify-between mb-2">
-                <Text className="text-white/70 font-bold text-[12px]">{progress.xp.toLocaleString()} XP</Text>
-                <Text className="text-white/40 text-[12px] font-medium">
-                  {xpToNextLevel > 0 ? `${xpToNextLevel.toLocaleString()} XP לרמה הבאה` : 'רמה מקסימלית! 💎'}
+            <View className="gap-2">
+              <View className="flex-row justify-between items-center">
+                <Text className="text-text-main font-black">{progress.xp.toLocaleString()} XP</Text>
+                <Text className="text-text-dim text-xs font-bold opacity-60">
+                  {xpToNextLevel > 0 ? `${xpToNextLevel.toLocaleString()} עד השלב הבא` : 'רמה מקסימלית'}
                 </Text>
               </View>
-              <View
-                style={{ backgroundColor: themeColors.primary + '15' }}
-                className="h-3 rounded-full overflow-hidden"
-              >
+              <View className="h-2 rounded-full bg-surface-mid overflow-hidden">
                 <MotiView
                   from={{ width: '0%' }}
                   animate={{ width: `${Math.round(progressToNextLevel * 100)}%` }}
-                  transition={{ type: 'timing', duration: 1200 }}
-                  style={{ backgroundColor: themeColors.primary, height: '100%', borderRadius: 999 }}
+                  className="h-full bg-primary rounded-full"
                 />
               </View>
             </View>
 
-            {/* Quick Stats Row */}
-            <View className="flex-row-reverse gap-3 mt-2">
-              <StatsChip 
-                icon={<Flame size={14} color="#f59e0b" />} 
-                value={`${progress.currentStreak}`}
-                label="Streak"
-                color={themeColors}
-              />
-              <StatsChip 
-                icon={<CheckCircle2 size={14} color="#10b981" />} 
-                value={`${progress.totalTasksCompleted}`}
-                label="משימות"
-                color={themeColors}
-              />
-              <StatsChip 
-                icon={<Zap size={14} color={themeColors.primary} />} 
-                value={`${progress.weeklyXp}`}
-                label="XP שבועי"
-                color={themeColors}
-              />
+            <View className="flex-row gap-3 mt-8">
+              <StatsChip icon={<Flame size={16} color="#f87171" />} value={progress.currentStreak.toString()} label="רצף" />
+              <StatsChip icon={<CheckCircle2 size={16} color="#10b981" />} value={progress.totalTasksCompleted.toString()} label="משימות" />
+              <StatsChip icon={<Zap size={16} color={themeColors.primary} />} value={progress.weeklyXp.toString()} label="שבועי" />
             </View>
-          </LinearGradient>
-        </MotiView>
+          </MotiView>
 
-        {/* ─── Streak Section ─── */}
-        <MotiView
-          from={{ opacity: 0, translateX: 30 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          transition={{ delay: 200, type: 'spring', stiffness: 120 }}
-          className="mx-5 mt-5"
-        >
-          <View
-            style={{ backgroundColor: themeColors.secondary, borderColor: 'rgba(255,255,255,0.06)' }}
-            className="rounded-[24px] p-5 border"
-          >
-            <View className="flex-row-reverse items-center gap-3 mb-3">
-              <View style={{ backgroundColor: '#f59e0b22' }} className="w-10 h-10 rounded-2xl items-center justify-center">
-                <Flame size={20} color="#f59e0b" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-black text-[16px] text-right">רצף יומי 🔥</Text>
-                <Text className="text-white/40 text-[12px] text-right font-medium">המשך להשלים משימות כל יום&rlm;</Text>
-              </View>
-            </View>
-
-            <View className="flex-row-reverse gap-3">
-              <View className="flex-1 rounded-2xl p-4 items-center" style={{ backgroundColor: '#f59e0b11' }}>
-                <Text className="text-[28px] font-black text-[#f59e0b]">{progress.currentStreak}</Text>
-                <Text className="text-white/40 text-[11px] font-bold mt-1">נוכחי</Text>
-              </View>
-              <View className="flex-1 rounded-2xl p-4 items-center" style={{ backgroundColor: '#f59e0b08' }}>
-                <Text className="text-[28px] font-black text-[#f59e0b]/60">{progress.longestStreak}</Text>
-                <Text className="text-white/40 text-[11px] font-bold mt-1">שיא</Text>
-              </View>
-            </View>
-
-            {/* Streak dots (last 7 days visual) */}
-            <View className="flex-row-reverse justify-center gap-2 mt-4">
-              {[...Array(7)].map((_, i) => {
-                const isActive = i < progress.currentStreak && i < 7;
-                return (
-                  <MotiView
-                    key={i}
-                    from={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 300 + i * 60, type: 'spring', stiffness: 200 }}
-                  >
-                    <View
-                      style={{
-                        backgroundColor: isActive ? '#f59e0b' : 'rgba(255,255,255,0.06)',
-                        shadowColor: isActive ? '#f59e0b' : 'transparent',
-                        shadowOpacity: isActive ? 0.5 : 0,
-                        shadowRadius: 6,
-                      }}
-                      className="w-8 h-8 rounded-full items-center justify-center"
-                    >
-                      {isActive && <Flame size={14} color="#fff" />}
-                    </View>
-                  </MotiView>
-                );
-              })}
-            </View>
-          </View>
-        </MotiView>
-
-        {/* ─── Achievements Section ─── */}
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 350, type: 'spring', stiffness: 120 }}
-          className="mx-5 mt-5"
-        >
-          <View className="flex-row-reverse items-center justify-between mb-3 px-1">
-            <View className="flex-row-reverse items-center gap-2">
-              <Medal size={18} color={themeColors.primary} />
-              <Text className="text-white font-black text-[17px]">הישגים</Text>
-            </View>
-            <View style={{ backgroundColor: themeColors.primary + '1A' }} className="px-3 py-1 rounded-full">
-              <Text style={{ color: themeColors.primary }} className="text-[11px] font-black">
-                {unlockedCount}/{totalCount}
-              </Text>
+          {/* Achievements Grid */}
+          <View className="flex-row items-center justify-between mb-6">
+            <Text className="text-text-main text-xl font-black tracking-tight">הישגים</Text>
+            <View className="bg-surface-low px-4 py-1.5 rounded-full border border-white/5">
+              <Text className="text-primary text-xs font-black">{unlockedCount}/{totalCount}</Text>
             </View>
           </View>
 
-          {/* Achievement Grid */}
-          <View className="flex-row-reverse flex-wrap gap-3">
+          <View className="flex-row flex-wrap -mx-2 mb-10">
             {achievements.map((achievement, index) => (
-              <AchievementCard
-                key={achievement.id}
-                achievement={achievement}
-                index={index}
-                themeColors={themeColors}
-              />
+              <AchievementCard key={achievement.id} achievement={achievement} index={index} />
             ))}
           </View>
-        </MotiView>
 
-        {/* ─── Level Roadmap ─── */}
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 500, type: 'spring', stiffness: 120 }}
-          className="mx-5 mt-5"
-        >
-          <View className="flex-row-reverse items-center gap-2 mb-3 px-1">
-            <TrendingUp size={18} color={themeColors.primary} />
-            <Text className="text-white font-black text-[17px]">מפת הרמות</Text>
+          {/* Road Map */}
+          <View className="flex-row items-center gap-3 mb-6">
+            <Text className="text-text-dim text-xs font-black uppercase tracking-[3px]">מפת הדרכים</Text>
+            <View className="h-[1px] flex-1 bg-white/10" />
           </View>
-
-          <View
-            style={{ backgroundColor: themeColors.secondary, borderColor: 'rgba(255,255,255,0.06)' }}
-            className="rounded-[24px] p-4 border"
-          >
+          
+          <View className="bg-surface-low rounded-outer overflow-hidden border border-white/5">
             {data.levels.map((lvl, i) => {
-              const isCurrentLevel = lvl.level === level.level;
+              const isCurrent = lvl.level === level.level;
               const isUnlocked = progress.xp >= lvl.xpRequired;
 
               return (
-                <MotiView
+                <View 
                   key={lvl.level}
-                  from={{ opacity: 0, translateX: 20 }}
-                  animate={{ opacity: 1, translateX: 0 }}
-                  transition={{ delay: 550 + i * 50, type: 'spring', stiffness: 130 }}
+                  className={`flex-row items-center p-5 gap-4 ${i < data.levels.length - 1 ? 'border-b border-white/5' : ''} ${isCurrent ? 'bg-primary/5' : ''}`}
                 >
-                  <View
-                    className="flex-row-reverse items-center gap-3 py-3"
-                    style={{
-                      borderBottomWidth: i < data.levels.length - 1 ? 1 : 0,
-                      borderBottomColor: 'rgba(255,255,255,0.04)',
-                    }}
-                  >
-                    <View
-                      style={{
-                        backgroundColor: isCurrentLevel
-                          ? themeColors.primary + '22'
-                          : isUnlocked
-                            ? '#10b98115'
-                            : 'rgba(255,255,255,0.04)',
-                        borderColor: isCurrentLevel ? themeColors.primary + '55' : 'transparent',
-                      }}
-                      className="w-11 h-11 rounded-2xl items-center justify-center border"
-                    >
-                      <Text className="text-[22px]">{lvl.emoji}</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text
-                        className="text-right font-black text-[14px]"
-                        style={{ color: isCurrentLevel ? themeColors.primary : isUnlocked ? '#10b981' : 'rgba(255,255,255,0.35)' }}
-                      >
-                        {lvl.title}
-                      </Text>
-                      <Text className="text-white/30 text-[11px] text-right font-medium">
-                        {lvl.xpRequired.toLocaleString()} XP
-                      </Text>
-                    </View>
-                    {isCurrentLevel && (
-                      <View style={{ backgroundColor: themeColors.primary + '22' }} className="px-2 py-1 rounded-lg">
-                        <Text style={{ color: themeColors.primary }} className="text-[10px] font-black">אתה כאן</Text>
-                      </View>
-                    )}
-                    {isUnlocked && !isCurrentLevel && (
-                      <CheckCircle2 size={16} color="#10b981" />
-                    )}
-                    {!isUnlocked && (
-                      <Lock size={14} color="rgba(255,255,255,0.2)" />
-                    )}
+                  <View className={`w-12 h-12 rounded-inner items-center justify-center border border-white/5 ${isUnlocked ? 'bg-surface-mid' : 'bg-surface-mid/50 opacity-40'}`}>
+                    <Text className="text-xl">{lvl.emoji}</Text>
                   </View>
-                </MotiView>
+                  <View className="flex-1 items-start">
+                    <Text className={`text-base font-black tracking-tight ${isUnlocked ? 'text-text-main' : 'text-text-dim opacity-40'}`}>{lvl.title}</Text>
+                    <Text className="text-text-dim text-[10px] font-black mt-1 uppercase tracking-widest opacity-60">{lvl.xpRequired.toLocaleString()} XP</Text>
+                  </View>
+                  {isCurrent && (
+                    <View className="bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                      <Text className="text-primary text-[10px] font-black uppercase">נוכחי</Text>
+                    </View>
+                  )}
+                </View>
               );
             })}
           </View>
-        </MotiView>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
 
-// ─── Sub-Components ──────────────────────────────────────────────────
-
-function StatsChip({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color: any }) {
-  return (
-    <View
-      className="flex-1 rounded-2xl p-3 items-center"
-      style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
-    >
-      <View className="flex-row-reverse items-center gap-1.5 mb-1">
-        {icon}
-        <Text className="text-white font-black text-[16px]">{value}</Text>
-      </View>
-      <Text className="text-white/35 text-[10px] font-bold">{label}</Text>
+          {/* Branding */}
+          <View className="mt-16 items-center opacity-20 pb-16">
+            <Cpu size={20} color="#fff" />
+            <Text className="text-[10px] text-white font-black uppercase tracking-[4px] mt-3">METRIC_ENGINE v2.1 • OBSIDIAN</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
 
-function AchievementCard({ achievement, index, themeColors }: { achievement: GamificationAchievement; index: number; themeColors: any }) {
+function StatsChip({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
+  return (
+    <View className="flex-1 bg-surface-mid rounded-inner p-4 items-center border border-white/5">
+      <View className="flex-row items-center gap-2 mb-1.5">
+        {icon}
+        <Text className="text-text-main text-lg font-black tracking-tight">{value}</Text>
+      </View>
+      <Text className="text-text-dim text-[10px] font-black uppercase tracking-widest opacity-60">{label}</Text>
+    </View>
+  );
+}
+
+function AchievementCard({ achievement, index }: { achievement: GamificationAchievement; index: number }) {
   const isUnlocked = achievement.unlocked;
 
   return (
     <MotiView
-      from={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 400 + index * 40, type: 'spring', stiffness: 150 }}
-      style={{ width: '47%' }}
+      from={{ opacity: 0, translateY: 15 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'spring', delay: index * 50 }}
+      style={{ width: '50%' }}
+      className="px-2 mb-4"
     >
-      <View
-        style={{
-          backgroundColor: isUnlocked ? themeColors.primary + '0D' : 'rgba(255,255,255,0.03)',
-          borderColor: isUnlocked ? themeColors.primary + '33' : 'rgba(255,255,255,0.05)',
-        }}
-        className="rounded-[20px] p-4 border items-center"
+      <TouchableOpacity 
+        activeOpacity={0.8}
+        onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        className={`rounded-outer p-5 items-center justify-center h-44 border border-white/5 ${isUnlocked ? 'bg-surface-low shadow-xl' : 'bg-surface-low/40 opacity-60'}`}
       >
-        <View
-          className="w-12 h-12 rounded-2xl items-center justify-center mb-2"
-          style={{
-            backgroundColor: isUnlocked ? themeColors.primary + '1A' : 'rgba(255,255,255,0.04)',
-          }}
-        >
-          {isUnlocked ? (
-            <Text className="text-[24px]">{achievement.emoji}</Text>
-          ) : (
-            <Lock size={20} color="rgba(255,255,255,0.15)" />
-          )}
+        <View className={`w-16 h-16 rounded-inner items-center justify-center mb-4 border border-white/5 ${isUnlocked ? 'bg-surface-mid' : 'bg-surface-mid/50 opacity-20'}`}>
+          {isUnlocked ? <Text className="text-3xl">{achievement.emoji}</Text> : <Lock size={24} color="#fff" opacity={0.5} />}
         </View>
-        <Text
-          className="text-center font-black text-[13px]"
-          style={{ color: isUnlocked ? '#fff' : 'rgba(255,255,255,0.25)' }}
-        >
-          {achievement.title}
-        </Text>
-        <Text
-          className="text-center text-[10px] font-medium mt-1"
-          style={{ color: isUnlocked ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.15)' }}
-          numberOfLines={2}
-        >
-          {achievement.description}
-        </Text>
-      </View>
+        <Text className={`text-xs font-black text-center mb-1.5 tracking-tight ${isUnlocked ? 'text-text-main' : 'text-text-dim'}`} numberOfLines={1}>{achievement.title}</Text>
+        <Text className="text-text-dim text-[10px] font-bold text-center leading-4 px-2 opacity-60" numberOfLines={2}>{achievement.description}</Text>
+      </TouchableOpacity>
     </MotiView>
   );
 }

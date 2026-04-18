@@ -1,18 +1,23 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, FlatList,
-  KeyboardAvoidingView, Platform, ActivityIndicator, InteractionManager,
+import { 
+  View, Text, TouchableOpacity, TextInput, ScrollView, 
+  KeyboardAvoidingView, Platform, Keyboard, FlatList, 
+  Dimensions, ActivityIndicator, InteractionManager 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MotiView } from 'moti';
-import { LinearGradient } from 'expo-linear-gradient';
-import {
-  Send, Bot, User as UserIcon, Sparkles, ArrowRight,
-  MessageCircle, Zap, ListTodo, BarChart3
+import { 
+  Send, ChevronRight, Sparkles, Brain, Bot, User, 
+  MoreVertical, Zap, Mic, Menu, Cpu, Fingerprint, Waves
 } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { MotiView, AnimatePresence } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../context/ThemeContext';
-import { taskService, ChatMessage } from '../services/taskService';
+import { taskService } from '../services/taskService';
+
+const { width, height } = Dimensions.get('window');
 
 interface DisplayMessage {
   id: string;
@@ -22,19 +27,44 @@ interface DisplayMessage {
 }
 
 const SUGGESTION_CHIPS = [
-  { text: 'מה לעשות עכשיו?', emoji: '🎯' },
-  { text: 'תנתח לי את ההתקדמות', emoji: '📊' },
-  { text: 'יש משימות באיחור?', emoji: '⚠️' },
-  { text: 'תעדף לי את המשימות', emoji: '⚡' },
-  { text: 'איך אני יכול להיות יותר פרודוקטיבי?', emoji: '🚀' },
-  { text: 'תסכם לי את השבוע', emoji: '📈' },
+  { text: 'מה המשימה הבאה?', emoji: '🎯' },
+  { text: 'לו״ז להיום', emoji: '📅' },
+  { text: 'תובנות AI', emoji: '🧠' },
+  { text: 'פרויקטים פתוחים', emoji: '🚀' },
 ];
+
+const AnimatedOrb = ({ size, color, delay = 0, initialPos }: { size: number, color: string, delay?: number, initialPos: { x: number, y: number } }) => (
+  <MotiView
+    from={{ opacity: 0.1, scale: 0.8, translateX: initialPos.x, translateY: initialPos.y }}
+    animate={{
+      opacity: [0.1, 0.3, 0.1],
+      scale: [1, 1.3, 1],
+      translateX: [initialPos.x, initialPos.x + 50, initialPos.x - 25, initialPos.x],
+      translateY: [initialPos.y, initialPos.y - 100, initialPos.y + 60, initialPos.y],
+    }}
+    transition={{ duration: 20000, loop: true, type: 'timing', delay }}
+    style={{
+      position: 'absolute',
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+    }}
+    className="blur-[100px]"
+  />
+);
 
 export default function AIChatScreen() {
   const { colors: themeColors } = useTheme();
-  const [messages, setMessages] = useState<DisplayMessage[]>([]);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
+  const [messages, setMessages] = useState<DisplayMessage[]>([
+    {
+      id: 'initial',
+      role: 'model',
+      text: 'שלום! אני Oliver, הסייען האישי שלך. איך אני יכול לעזור לך לייעל את יום העבודה שלך היום?',
+      timestamp: new Date(),
+    }
+  ]);
   const [isTyping, setIsTyping] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -44,12 +74,14 @@ export default function AIChatScreen() {
   }, []);
 
   const scrollToBottom = useCallback(() => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, []);
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const handleSendMessage = async (text: string) => {
     if (!text.trim() || isTyping) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -66,14 +98,8 @@ export default function AIChatScreen() {
     setIsTyping(true);
     scrollToBottom();
 
-    // Build history for Gemini
-    const newHistory: ChatMessage[] = [
-      ...chatHistory,
-      { role: 'user', parts: [{ text: text.trim() }] },
-    ];
-
     try {
-      const response = await taskService.sendChatMessage(text.trim(), chatHistory);
+      const response = await taskService.sendChatMessage(text.trim(), []);
 
       if (response?.text) {
         const botMsg: DisplayMessage = {
@@ -84,24 +110,14 @@ export default function AIChatScreen() {
         };
 
         setMessages(prev => [...prev, botMsg]);
-        setChatHistory([
-          ...newHistory,
-          { role: 'model', parts: [{ text: response.text }] },
-        ]);
       } else {
-        const errorMsg: DisplayMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'model',
-          text: 'מצטער, לא הצלחתי לעבד את הבקשה. נסה שוב בעוד רגע 🙏',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMsg]);
+        throw new Error('No response');
       }
     } catch (error) {
       const errorMsg: DisplayMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: 'שגיאת חיבור. בדוק את החיבור לאינטרנט ונסה שוב ⚡',
+        text: 'מצטער, חלה שגיאה בחיבור ל-Oliver AI. נסה שוב בעוד רגע 🙏',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -109,260 +125,199 @@ export default function AIChatScreen() {
       setIsTyping(false);
       scrollToBottom();
     }
-  }, [isTyping, chatHistory, scrollToBottom]);
+  };
 
-  const renderMessage = useCallback(({ item, index }: { item: DisplayMessage; index: number }) => {
+  const renderMessage = ({ item, index }: { item: DisplayMessage, index: number }) => {
     const isUser = item.role === 'user';
 
     return (
       <MotiView
-        from={{ opacity: 0, translateY: 10, scale: 0.95 }}
+        from={{ opacity: 0, translateY: 20, scale: 0.95 }}
         animate={{ opacity: 1, translateY: 0, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-        className={`px-4 mb-3 ${isUser ? 'items-flex-start' : 'items-flex-end'}`}
-        style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}
+        transition={{ type: 'spring', damping: 25, delay: 100 }}
+        className={`mb-6 px-4 w-full ${isUser ? 'items-start' : 'items-end'}`}
       >
-        <View className="flex-row-reverse items-end gap-2" style={{ maxWidth: '85%' }}>
-          {/* Avatar */}
-          {!isUser && (
-            <View
-              style={{ backgroundColor: themeColors.primary + '22' }}
-              className="w-8 h-8 rounded-full items-center justify-center"
-            >
-              <Bot size={16} color={themeColors.primary} />
-            </View>
-          )}
-
-          {/* Bubble */}
-          <View
-            style={{
-              backgroundColor: isUser ? themeColors.primary : themeColors.secondary,
-              borderColor: isUser ? themeColors.primary : 'rgba(255,255,255,0.08)',
-              borderWidth: isUser ? 0 : 1,
+        <View className={`flex-row items-end gap-3 max-w-[85%] ${isUser ? 'self-start' : 'self-end'}`}>
+          <View 
+            className={`rounded-inner overflow-hidden ${isUser ? 'bg-surface-mid' : 'bg-surface-low border border-white/5'}`}
+            style={{ 
+              borderBottomRightRadius: isUser ? 4 : 12,
+              borderBottomLeftRadius: isUser ? 12 : 4,
             }}
-            className={`rounded-[20px] px-4 py-3 ${isUser ? 'rounded-br-lg' : 'rounded-bl-lg'}`}
           >
-            <Text
-              className="text-right text-[14px] leading-6"
-              style={{ color: isUser ? '#fff' : 'rgba(255,255,255,0.85)' }}
-              selectable
+            <LinearGradient
+              colors={isUser ? [themeColors.primary + '33', 'transparent'] : ['transparent', 'transparent']}
+              className="px-4 py-3"
             >
-              {item.text}
-            </Text>
+              <Text 
+                className={`text-[15px] leading-[22px] ${isUser ? 'text-white font-bold' : 'text-main'}`}
+              >
+                {item.text}&rlm;
+              </Text>
+            </LinearGradient>
+          </View>
+          
+          <View 
+             className={`w-9 h-9 rounded-inner items-center justify-center border ${isUser ? 'bg-surface-low border-white/10' : 'bg-surface-low border-white/10'}`}
+          >
+            {isUser ? (
+                <User size={16} color="#fff" />
+            ) : (
+                <Bot size={16} color={themeColors.primary} />
+            )}
           </View>
         </View>
+        <Text className={`text-[10px] text-dim mt-1.5 ${isUser ? 'ps-12' : 'pe-12'}`}>
+          {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </Text>
       </MotiView>
     );
-  }, [themeColors]);
+  };
 
-  if (!isReady) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }} edges={['top']}>
-        <View className="flex-1 items-center justify-center">
-          <MotiView
-            from={{ opacity: 0.4, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1.1 }}
-            transition={{ loop: true, type: 'timing', duration: 800 }}
-          >
-            <MessageCircle size={48} color={themeColors.primary} />
-          </MotiView>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (!isReady) return <View className="flex-1 bg-obsidian" />;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }} edges={['top']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        {/* ─── Header ─── */}
-        <View
-          className="px-5 py-4 border-b"
-          style={{ borderBottomColor: 'rgba(255,255,255,0.06)' }}
+    <View className="flex-1 bg-obsidian">
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+          style={{ flex: 1 }}
         >
-          <View className="flex-row-reverse items-center gap-3">
-            <LinearGradient
-              colors={[themeColors.primary + '33', themeColors.primary + '11']}
-              className="w-11 h-11 rounded-2xl items-center justify-center"
-            >
-              <Bot size={22} color={themeColors.primary} />
-            </LinearGradient>
-            <View className="flex-1">
-              <Text className="text-white font-black text-[17px] text-right">TaskFlow AI</Text>
-              <View className="flex-row-reverse items-center gap-1.5">
-                <View className="w-2 h-2 rounded-full bg-emerald-400" />
-                <Text className="text-white/40 text-[11px] text-right font-medium">מחובר ומוכן לעזור&rlm;</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* ─── Messages ─── */}
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 16 }}
-          showsVerticalScrollIndicator={false}
-          onContentSizeChange={scrollToBottom}
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center px-8 pt-12">
-              {/* Welcome State */}
-              <MotiView
-                from={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 120 }}
-                className="items-center mb-8"
+          {/* Superior Header */}
+          <View className="px-6 py-4 flex-row items-center justify-between border-b border-white/5">
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity 
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.back();
+                }}
+                className="w-10 h-10 rounded-inner bg-surface-low border border-white/5 items-center justify-center"
               >
-                <LinearGradient
-                  colors={[themeColors.primary + '22', 'transparent']}
-                  className="w-20 h-20 rounded-full items-center justify-center mb-4"
-                >
-                  <Sparkles size={36} color={themeColors.primary} />
-                </LinearGradient>
-                <Text className="text-white font-black text-[20px] text-center mb-2">
-                  היי! אני הסוכן שלך 👋
-                </Text>
-                <Text className="text-white/40 text-[13px] text-center font-medium leading-5">
-                  אני מכיר את כל המשימות שלך ויכול לעזור{'\n'}לתעדף, לנתח ולתכנן את היום&rlm;
-                </Text>
-              </MotiView>
+                <ChevronRight size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity className="w-10 h-10 rounded-inner bg-surface-low border border-white/5 items-center justify-center">
+                <MoreVertical size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
 
-              {/* Suggestion Chips */}
-              <View className="w-full">
-                <Text className="text-white/30 text-[11px] text-right font-bold mb-3 px-1">
-                  נסה לשאול&rlm;:
-                </Text>
-                <View className="flex-row-reverse flex-wrap gap-2">
-                  {SUGGESTION_CHIPS.map((chip, index) => (
-                    <MotiView
-                      key={chip.text}
-                      from={{ opacity: 0, translateY: 10 }}
-                      animate={{ opacity: 1, translateY: 0 }}
-                      transition={{ delay: 200 + index * 70, type: 'spring', stiffness: 150 }}
-                    >
-                      <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => sendMessage(chip.text)}
-                        style={{
-                          backgroundColor: themeColors.secondary,
-                          borderColor: 'rgba(255,255,255,0.08)',
-                        }}
-                        className="px-4 py-3 rounded-2xl border flex-row-reverse items-center gap-2"
-                      >
-                        <Text className="text-[16px]">{chip.emoji}</Text>
-                        <Text className="text-white/70 text-[13px] font-medium">{chip.text}</Text>
-                      </TouchableOpacity>
-                    </MotiView>
-                  ))}
+            <View className="flex-row items-center gap-3">
+              <View className="items-start">
+                <View className="flex-row items-center gap-2">
+                  <View className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]" />
+                  <Text className="text-text-main text-[18px] font-black tracking-tight">Oliver AI</Text>
                 </View>
+                <Text className="text-text-dim text-[10px] font-black uppercase tracking-[1px] opacity-60">NEURAL HUB</Text>
+              </View>
+
+              <View className="w-10 h-10 rounded-outer bg-surface-low border border-white/5 items-center justify-center shadow-2xl">
+                <Bot size={20} color={themeColors.primary} />
               </View>
             </View>
-          }
-        />
-
-        {/* ─── Typing Indicator ─── */}
-        {isTyping && (
-          <MotiView
-            from={{ opacity: 0, translateY: 5 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            className="px-5 pb-2"
-          >
-            <View className="flex-row-reverse items-center gap-2">
-              <View
-                style={{ backgroundColor: themeColors.primary + '22' }}
-                className="w-7 h-7 rounded-full items-center justify-center"
-              >
-                <Bot size={14} color={themeColors.primary} />
-              </View>
-              <View
-                style={{ backgroundColor: themeColors.secondary }}
-                className="px-4 py-3 rounded-2xl flex-row items-center gap-1.5"
-              >
-                {[0, 1, 2].map(i => (
-                  <MotiView
-                    key={i}
-                    from={{ opacity: 0.3, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1.2 }}
-                    transition={{
-                      loop: true,
-                      type: 'timing',
-                      duration: 500,
-                      delay: i * 150,
-                    }}
-                  >
-                    <View
-                      style={{ backgroundColor: themeColors.primary }}
-                      className="w-2 h-2 rounded-full"
-                    />
-                  </MotiView>
-                ))}
-              </View>
-              <Text className="text-white/30 text-[11px] font-medium">חושב&rlm;...</Text>
-            </View>
-          </MotiView>
-        )}
-
-        {/* ─── Input Bar ─── */}
-        <View
-          className="px-4 py-3 border-t"
-          style={{
-            borderTopColor: 'rgba(255,255,255,0.06)',
-            backgroundColor: themeColors.background,
-          }}
-        >
-          <View
-            className="flex-row-reverse items-end gap-2 rounded-[20px] px-4 py-2"
-            style={{
-              backgroundColor: themeColors.secondary,
-              borderColor: 'rgba(255,255,255,0.08)',
-              borderWidth: 1,
-            }}
-          >
-            <TextInput
-              className="flex-1 text-white text-[14px] text-right min-h-[36px] max-h-[100px]"
-              placeholder="שאל את הסוכן..."
-              placeholderTextColor="rgba(255,255,255,0.25)"
-              value={inputText}
-              onChangeText={setInputText}
-              multiline
-              onSubmitEditing={() => sendMessage(inputText)}
-              returnKeyType="send"
-              editable={!isTyping}
-              style={{ fontFamily: Platform.OS === 'ios' ? undefined : 'sans-serif' }}
-            />
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => sendMessage(inputText)}
-              disabled={!inputText.trim() || isTyping}
-              className="mb-1"
-            >
-              <LinearGradient
-                colors={
-                  inputText.trim() && !isTyping
-                    ? [themeColors.primary, themeColors.primary + 'CC']
-                    : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.03)']
-                }
-                className="w-9 h-9 rounded-full items-center justify-center"
-              >
-                {isTyping ? (
-                  <ActivityIndicator size="small" color={themeColors.primary} />
-                ) : (
-                  <ArrowRight
-                    size={18}
-                    color={inputText.trim() ? '#fff' : 'rgba(255,255,255,0.2)'}
-                    style={{ transform: [{ rotate: '180deg' }] }}
-                  />
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+          {/* Conversation Stream */}
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingTop: 24, paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={scrollToBottom}
+            ListEmptyComponent={
+              <View className="items-center justify-center py-12 px-8">
+                <MotiView
+                  from={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', delay: 300 }}
+                  className="items-center"
+                >
+                  <View className="w-20 h-20 rounded-outer bg-surface-low items-center justify-center mb-8 border border-white/10">
+                    <Sparkles size={36} color={themeColors.primary} fill={themeColors.primary} />
+                  </View>
+                  <Text className="text-white text-[28px] font-extrabold text-center mb-3">כיצד אוכל לסייע?</Text>
+                  <Text className="text-dim text-[16px] text-center leading-7 px-2">
+                     אני כאן כדי לסייע לך לארגן משימות, לעדכן את הלו"ז או פשוט לספק תובנות חכמות.
+                  </Text>
+                </MotiView>
+              </View>
+            }
+          />
+
+          <AnimatePresence>
+            {isTyping && (
+                <MotiView 
+                  from={{ opacity: 0, translateY: 10 }} 
+                  animate={{ opacity: 1, translateY: 0 }} 
+                  exit={{ opacity: 0 }}
+                  className="flex-row items-center px-6 py-3 gap-3"
+                >
+                  <View className="bg-surface-low py-3 px-4 rounded-inner border border-white/5 flex-row items-center gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <MotiView
+                        key={i}
+                        animate={{ translateY: [0, -3, 0], opacity: [0.3, 1, 0.3] }}
+                        transition={{ loop: true, duration: 800, delay: i * 200 }}
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: themeColors.primary }}
+                      />
+                    ))}
+                  </View>
+                  <Text className="text-dim text-[10px] font-bold uppercase">מעבד מידע...</Text>
+                </MotiView>
+            )}
+          </AnimatePresence>
+
+          {/* Interactive Input Hub */}
+          <View className="px-4 pb-8 pt-2">
+            <View className="bg-surface-low rounded-outer border border-white/10 p-2 flex-row items-center shadow-2xl gap-2">
+              <TouchableOpacity className="w-10 h-10 bg-surface-mid rounded-inner items-center justify-center border border-white/5">
+                <Sparkles size={18} color="#818cf8" />
+              </TouchableOpacity>
+              
+              <TextInput
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="איך אוכל לעזור?"
+                placeholderTextColor="#64748b"
+                className="flex-1 text-white px-3 text-[16px] py-2"
+                multiline
+                style={{ maxHeight: 120 }}
+              />
+
+              <TouchableOpacity 
+                onPress={() => handleSendMessage(inputText)}
+                disabled={!inputText.trim() || isTyping}
+                className={`w-10 h-10 rounded-inner items-center justify-center ${
+                  inputText.trim() && !isTyping ? 'bg-indigo-600 shadow-lg' : 'bg-white/5'
+                }`}
+              >
+                {isTyping ? <ActivityIndicator size="small" color="#fff" /> : <Send size={18} color={inputText.trim() ? '#fff' : '#475569'} />}
+              </TouchableOpacity>
+            </View>
+
+            {/* Hint Chips */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              className="mt-4"
+              contentContainerStyle={{ paddingHorizontal: 4, flexDirection: 'row', gap: 8 }}
+            >
+              {SUGGESTION_CHIPS.map((chip, i) => (
+                <TouchableOpacity 
+                  key={i}
+                  onPress={() => handleSendMessage(chip.text)}
+                  className="bg-surface-low px-3 py-2 rounded-full border border-white/5 flex-row items-center gap-2"
+                >
+                  <Text className="text-[14px]">{chip.emoji}</Text>
+                  <Text className="text-dim text-[12px] font-bold">{chip.text}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }

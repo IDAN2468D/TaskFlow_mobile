@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, CloudSync, History, CheckCircle2, ShieldCheck, DatabaseBackup } from 'lucide-react-native';
+import { ChevronRight, CloudSync, History, CheckCircle2, ShieldCheck, DatabaseBackup, Cpu } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 export default function CloudSyncScreen() {
   // const router = useRouter();
@@ -17,124 +18,147 @@ export default function CloudSyncScreen() {
       />
 
       <SafeAreaView className="flex-1" edges={['top']}>
-        {/* Header */}
-        <View className="flex-row-reverse items-center justify-between px-6 pt-4 pb-4">
+        <View className="flex-row items-center justify-between px-6 py-4">
+          <View className="flex-row items-center gap-4">
+            <View className="w-12 h-12 rounded-outer bg-surface-low items-center justify-center border border-white/5 shadow-2xl">
+              <CloudSync size={24} color="#3b82f6" />
+            </View>
+            <View>
+              <Text className="text-text-main text-3xl font-black tracking-tighter">סנכרון ענן</Text>
+              <View className="flex-row items-center gap-1.5 mt-1">
+                <View className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-2xl" />
+                <Text className="text-text-dim text-[10px] font-black uppercase tracking-widest opacity-60">CLOUD_PULSE_ACTIVE</Text>
+              </View>
+            </View>
+          </View>
           <TouchableOpacity 
-            onPress={() => router.back()}
-            className="w-12 h-12 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-md"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }}
+            className="w-10 h-10 rounded-inner bg-surface-low items-center justify-center border border-white/5"
           >
-            <ChevronRight color="#fff" size={24} />
+            <ChevronRight size={24} color="#fff" />
           </TouchableOpacity>
-          <Text className="text-[22px] font-extrabold text-white tracking-widest text-shadow-sm shadow-blue-500">סנכרון ענן AI</Text>
-          <View className="w-12 h-12" />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 60 }}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+          className="flex-1"
+        >
           
           <MotiView
-             from={{ opacity: 0, scale: 0.9, translateY: 20 }}
+             from={{ opacity: 0, scale: 0.95, translateY: 15 }}
              animate={{ opacity: 1, scale: 1, translateY: 0 }}
              transition={{ type: 'spring', damping: 18 }}
-             className="items-center mb-12 mt-4 relative"
+             className="items-center mb-10 mt-6"
           >
-            <View className="absolute inset-0 bg-blue-500/20 rounded-full blur-[80px] scale-150" />
-            
-            <MotiView 
-               from={{ scale: 0.9 }}
-               animate={{ scale: 1.05 }}
-               transition={{ loop: true, type: 'timing', duration: 2500 }}
-               className="w-40 h-40 rounded-full items-center justify-center relative shadow-2xl shadow-blue-500/30"
-            >
-               <LinearGradient colors={['#1e3a8a', '#3b82f6']} className="absolute inset-0 rounded-[40px] opacity-80 blur-md" />
-               <View className="w-32 h-32 bg-blue-500/10 rounded-[30px] items-center justify-center border-2 border-blue-400/50 backdrop-blur-md">
-                 <CloudSync color="#93c5fd" size={56} strokeWidth={1.5} />
+            <View className="w-40 h-40 rounded-outer bg-surface-low items-center justify-center border border-white/5 shadow-2xl relative overflow-hidden">
+               <LinearGradient colors={['rgba(59, 130, 246, 0.1)', 'transparent']} className="absolute inset-0" />
+               <View className="w-28 h-28 rounded-inner bg-surface-mid items-center justify-center border border-white/5 shadow-inner">
+                  <CloudSync color="#3b82f6" size={56} strokeWidth={1.5} />
                </View>
-            </MotiView>
+            </View>
             
-            <Text className="text-[28px] font-extrabold text-white text-center mt-6 tracking-tight shadow-md">M-Cloud פעיל</Text>
-            <Text className="text-[15px] font-medium text-blue-200/80 text-center leading-[24px] px-6 mt-2">
-              המשימות ופעולות המחולל שלך מסונכרנות בזמן אמת ומגובות בקידוד אבטחה מחמיר.
+            <Text className="text-text-main text-3xl font-black text-center mt-8 tracking-tighter">M-Cloud פעיל</Text>
+            <Text className="text-text-dim text-sm font-bold text-center leading-5 px-6 mt-3 opacity-70">
+              המשימות והאסטרטגיות שלך מסונכרנות בזמן אמת ומגובות בהצפנה צבאית מקצה לקצה.
             </Text>
           </MotiView>
 
           {/* Sync Progress Card */}
-          <MotiView from={{ opacity: 0, translateY: 30 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 200, type: 'spring' }}>
-            <View className="bg-black/40 rounded-[32px] border border-white/5 p-6 mb-8 shadow-2xl overflow-hidden relative">
-              <LinearGradient colors={['rgba(255,255,255,0.03)', 'transparent']} className="absolute inset-0" />
-              
-              <View className="flex-row-reverse items-center justify-between mb-6">
-                <View className="flex-row-reverse items-center gap-3">
-                  <View className="bg-emerald-500/20 p-2 rounded-full border border-emerald-500/30 shadow-inner">
-                     <CheckCircle2 color="#34d399" size={24} />
-                  </View>
-                  <View>
-                    <Text className="text-white font-extrabold text-[18px] text-right">מצב סנכרון</Text>
-                    <Text className="text-slate-400 font-medium text-[12px] text-right">הכל מגובה בהצלחה</Text>
-                  </View>
+          <MotiView 
+            from={{ opacity: 0, translateY: 15 }} 
+            animate={{ opacity: 1, translateY: 0 }} 
+            transition={{ delay: 200, type: 'spring' }}
+            className="bg-surface-low rounded-outer border border-white/5 p-6 mb-8 shadow-2xl overflow-hidden relative"
+          >
+            <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
+            
+            <View className="flex-row items-center justify-between mb-6">
+              <View className="flex-row items-center gap-4">
+                <View className="w-10 h-10 bg-emerald-500/10 rounded-inner items-center justify-center border border-emerald-500/20 shadow-sm">
+                   <CheckCircle2 color="#10b981" size={20} />
                 </View>
-                <View className="bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                  <Text className="text-emerald-400 font-extrabold text-[12px] uppercase tracking-widest">מעודכן</Text>
+                <View>
+                  <Text className="text-text-main font-black text-lg tracking-tight">מצב סנכרון</Text>
+                  <Text className="text-text-dim font-bold text-[10px] uppercase tracking-widest opacity-60">DATA_INTEGRITY_VERIFIED</Text>
                 </View>
               </View>
-              
-              <View className="h-3 w-full bg-white/5 rounded-full overflow-hidden flex-row-reverse shadow-inner border border-white/5">
-                <MotiView 
-                  from={{ width: '0%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ delay: 500, type: 'timing', duration: 1500 }}
-                  className="h-full"
-                >
-                  <LinearGradient colors={['#34d399', '#10b981']} start={{ x: 1, y: 0 }} end={{ x: 0, y: 0 }} className="h-full rounded-full" />
-                </MotiView>
+              <View className="bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <Text className="text-emerald-500 font-black text-[10px] uppercase">מעודכן</Text>
               </View>
+            </View>
+            
+            <View className="h-2 rounded-full bg-surface-mid overflow-hidden flex-row border border-white/5">
+              <MotiView 
+                from={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ delay: 500, type: 'timing', duration: 1500 }}
+                className="h-full bg-emerald-500 rounded-full"
+              />
+            </View>
 
-              <View className="flex-row-reverse justify-between mt-4 px-1">
-                <Text className="text-slate-500 text-[12px] font-extrabold tracking-widest uppercase">לפני שתים עשרה דק׳</Text>
-                <Text className="text-emerald-500 text-[12px] font-extrabold">100%</Text>
-              </View>
+            <View className="flex-row justify-between mt-4">
+              <Text className="text-text-dim text-[10px] font-black uppercase tracking-[2px] opacity-40">LAST_PULSE: 12_MIN_AGO</Text>
+              <Text className="text-emerald-500 text-[10px] font-black">100% SUCCESS</Text>
             </View>
           </MotiView>
 
           {/* Action Blocks */}
-          <MotiView from={{ opacity: 0, translateY: 30 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 350, type: 'spring' }}>
-            
-            <TouchableOpacity activeOpacity={0.7} className="flex-row-reverse items-center bg-black/40 p-5 rounded-[24px] border border-white/5 shadow-lg relative overflow-hidden mb-5">
-              <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-              <View className="w-12 h-12 bg-indigo-500/10 rounded-[16px] items-center justify-center border border-indigo-500/20 shadow-inner ml-4">
-                <DatabaseBackup color="#818cf8" size={24} />
+          <View className="gap-y-4">
+            <TouchableOpacity 
+              activeOpacity={0.8} 
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              className="flex-row items-center bg-surface-low p-5 rounded-outer border border-white/5 shadow-lg relative overflow-hidden gap-4"
+            >
+              <View className="w-12 h-12 bg-surface-mid rounded-inner items-center justify-center border border-white/5 shadow-inner">
+                <DatabaseBackup color="#3b82f6" size={22} />
               </View>
-              <View className="flex-1 items-end">
-                 <Text className="text-white text-[17px] font-extrabold mb-0.5">סנכרון עכשיו</Text>
-                 <Text className="text-slate-400 text-[12px] font-medium">דחוף מידע משתנה ידנית לענן</Text>
+              <View className="flex-1">
+                 <Text className="text-text-main text-lg font-black tracking-tight">סנכרון ידני</Text>
+                 <Text className="text-text-dim text-xs font-bold opacity-60">דחוף שינויים אחרונים לענן</Text>
               </View>
-              <ChevronRight color="#64748b" size={20} style={{ transform: [{ scaleX: -1 }] }} />
+              <ChevronRight color="rgba(255,255,255,0.2)" size={18} style={{ transform: [{ scaleX: -1 }] }} />
             </TouchableOpacity>
 
-            <TouchableOpacity activeOpacity={0.7} className="flex-row-reverse items-center bg-black/40 p-5 rounded-[24px] border border-white/5 shadow-lg relative overflow-hidden mb-5">
-              <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-              <View className="w-12 h-12 bg-indigo-500/10 rounded-[16px] items-center justify-center border border-indigo-500/20 shadow-inner ml-4">
-                <History color="#818cf8" size={24} />
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              className="flex-row items-center bg-surface-low p-5 rounded-outer border border-white/5 shadow-lg relative overflow-hidden gap-4"
+            >
+              <View className="w-12 h-12 bg-surface-mid rounded-inner items-center justify-center border border-white/5 shadow-inner">
+                <History color="#3b82f6" size={22} />
               </View>
-              <View className="flex-1 items-end">
-                 <Text className="text-white text-[17px] font-extrabold mb-0.5">היסטוריית גרסאות</Text>
-                 <Text className="text-slate-400 text-[12px] font-medium">שחזר מחיקות מהעבר</Text>
+              <View className="flex-1">
+                 <Text className="text-text-main text-lg font-black tracking-tight">היסטוריית גרסאות</Text>
+                 <Text className="text-text-dim text-xs font-bold opacity-60">שחזר נתונים מנקודות זמן</Text>
               </View>
-              <ChevronRight color="#64748b" size={20} style={{ transform: [{ scaleX: -1 }] }} />
+              <ChevronRight color="rgba(255,255,255,0.2)" size={18} style={{ transform: [{ scaleX: -1 }] }} />
             </TouchableOpacity>
 
-            <TouchableOpacity activeOpacity={0.7} className="flex-row-reverse items-center bg-black/40 p-5 rounded-[24px] border border-white/5 shadow-lg relative overflow-hidden">
-              <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-              <View className="w-12 h-12 bg-emerald-500/10 rounded-[16px] items-center justify-center border border-emerald-500/20 shadow-inner ml-4">
-                <ShieldCheck color="#34d399" size={24} />
+            <TouchableOpacity 
+              activeOpacity={0.8}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              className="flex-row items-center bg-surface-low p-5 rounded-outer border border-white/5 shadow-lg relative overflow-hidden gap-4"
+            >
+              <View className="w-12 h-12 bg-surface-mid rounded-inner items-center justify-center border border-white/5 shadow-inner">
+                <ShieldCheck color="#3b82f6" size={22} />
               </View>
-              <View className="flex-1 items-end">
-                 <Text className="text-white text-[17px] font-extrabold mb-0.5">אבטחת מידע</Text>
-                 <Text className="text-slate-400 text-[12px] font-medium">ניהול גישה והצפנה</Text>
+              <View className="flex-1">
+                 <Text className="text-text-main text-lg font-black tracking-tight">אבטחה והצפנה</Text>
+                 <Text className="text-text-dim text-xs font-bold opacity-60">ניהול מפתחות גישה</Text>
               </View>
-              <ChevronRight color="#64748b" size={20} style={{ transform: [{ scaleX: -1 }] }} />
+              <ChevronRight color="rgba(255,255,255,0.2)" size={18} style={{ transform: [{ scaleX: -1 }] }} />
             </TouchableOpacity>
+          </View>
 
-          </MotiView>
+          {/* Branding */}
+          <View className="mt-16 items-center opacity-20 pb-16">
+            <Cpu size={20} color="#fff" />
+            <Text className="text-[10px] text-white font-black uppercase tracking-[4px] mt-3">M-CLOUD ENGINE v4.2 • OBSIDIAN</Text>
+          </View>
 
         </ScrollView>
       </SafeAreaView>

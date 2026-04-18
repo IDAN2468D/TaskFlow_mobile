@@ -1,132 +1,153 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, KeyboardAvoidingView, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, Save, User as UserIcon, Mail, Shield, Camera } from 'lucide-react-native';
+import { ChevronRight, ChevronLeft, Save, User as UserIcon, Mail, Shield, Camera, Cpu } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { router } from 'expo-router';
+import { useTheme } from '../context/ThemeContext';
+import * as Haptics from 'expo-haptics';
 
 export default function AccountSettingsScreen() {
-  // const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const [name, setName] = useState('מנהל המערכת');
   const [email, setEmail] = useState('admin@taskflow.ai');
 
+  const handleSave = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert('הגדרות עודכנו', 'השינויים שלך נשמרו בהצלחה במערכת\u200F.');
+    router.back();
+  };
+
   return (
     <View className="flex-1 bg-obsidian">
-      {/* Background ambient glow */}
-      <LinearGradient 
-        colors={['rgba(99, 102, 241, 0.12)', 'transparent']} 
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 400 }} 
-      />
-
+      <StatusBar barStyle="light-content" />
+      
       <SafeAreaView className="flex-1" edges={['top']}>
-        {/* Premium Transparent Header */}
-        <View className="flex-row-reverse items-center justify-between px-6 pt-4 pb-4">
-          <TouchableOpacity 
-            onPress={() => router.back()}
-            className="w-12 h-12 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-md"
-          >
-            <ChevronRight color="#fff" size={24} />
-          </TouchableOpacity>
-          <Text className="text-[22px] font-extrabold text-white tracking-widest text-shadow-sm shadow-indigo-500">הגדרות חשבון</Text>
-          <View className="w-12 h-12" />
-        </View>
-
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 60 }}>
+        {/* Standardized Obsidian Header */}
+        <MotiView
+          from={{ opacity: 0, translateY: -10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          className="px-6 pt-4 pb-6 border-b border-white/5"
+        >
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-4">
+              <TouchableOpacity 
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.back();
+                }}
+                className="w-12 h-12 rounded-outer bg-surface-low justify-center items-center border border-white/5"
+              >
+                <ChevronRight size={24} color="#fff" />
+              </TouchableOpacity>
+              <View>
+                <View className="flex-row items-center gap-1.5 mb-0.5">
+                   <View className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />
+                   <Text className="text-text-dim text-[10px] font-black uppercase tracking-[2px]">SECURITY_CORE_ACTIVE</Text>
+                </View>
+                <Text className="text-text-main text-2xl font-black tracking-tighter">הגדרות חשבון</Text>
+              </View>
+            </View>
             
-            {/* Glowing Avatar */}
+            <View className="w-10 h-10 rounded-inner bg-surface-mid items-center justify-center border border-white/5">
+               <Cpu size={20} color={themeColors.primary} />
+            </View>
+          </View>
+        </MotiView>
+
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false} 
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+            className="flex-1"
+          >
+            
+            {/* Avatar Section */}
             <MotiView
                from={{ opacity: 0, scale: 0.9, translateY: 10 }}
                animate={{ opacity: 1, scale: 1, translateY: 0 }}
-               transition={{ type: 'spring', damping: 20 }}
-               className="items-center mb-10 mt-4 relative"
+               className="items-center mb-10 mt-4"
             >
               <View className="relative">
-                <View className="absolute inset-0 bg-indigo-500/30 rounded-full blur-xl scale-110" />
-                <LinearGradient 
-                  colors={['#1e1b4b', '#312e81']} 
-                  className="w-32 h-32 rounded-full border-[3px] border-indigo-400/50 items-center justify-center shadow-2xl shadow-indigo-500/50 overflow-hidden"
-                >
-                  <UserIcon size={52} color="#a5b4fc" strokeWidth={1.5} />
+                <View className="w-32 h-32 rounded-outer overflow-hidden border-2 border-white/10 bg-surface-low items-center justify-center shadow-2xl">
+                  <UserIcon size={52} color="#fff" strokeWidth={1.5} opacity={0.2} />
                   <View className="absolute bottom-0 w-full h-8 bg-black/40 items-center justify-center">
-                     <Camera size={14} color="#e0e7ff" />
+                     <Camera size={14} color="#fff" opacity={0.6} />
                   </View>
-                </LinearGradient>
+                </View>
+                <View className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-inner border-2 border-obsidian items-center justify-center shadow-lg">
+                   <Shield size={16} color="#fff" />
+                </View>
               </View>
-              <Text className="text-white font-extrabold text-[24px] mt-5 tracking-tight">{name}</Text>
-              <Text className="text-indigo-300 font-medium text-[15px] mt-1 tracking-wider uppercase">{"\u202A" + email + "\u202C"}</Text>
+              <Text className="text-text-main font-black text-2xl mt-4 tracking-tight">{name}</Text>
+              <Text className="text-primary font-black text-[11px] mt-1 tracking-[2px] uppercase opacity-60">ADMIN_ACCESS_LEVEL_01</Text>
             </MotiView>
 
-            {/* Inputs Container */}
-            <View className="space-y-6">
+            {/* Form Section */}
+            <View className="gap-y-6">
               
-              <MotiView from={{ opacity: 0, translateX: 30 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 100, type: 'timing', duration: 400 }}>
-                <Text className="text-indigo-200 text-[12px] font-extrabold uppercase tracking-[3px] text-right mb-2">שם משתמש</Text>
-                <View className="bg-black/40 border border-indigo-500/20 rounded-[24px] flex-row-reverse items-center px-5 h-16 shadow-inner relative overflow-hidden">
-                  <LinearGradient colors={['rgba(255,255,255,0.03)', 'transparent']} className="absolute inset-0" />
-                  <UserIcon size={22} color="#818cf8" className="ml-4" />
+              <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 100 }}>
+                <Text className="text-text-dim text-[10px] font-black uppercase tracking-[3px] mb-2 opacity-60">שם משתמש</Text>
+                <View className="bg-surface-low border border-white/5 rounded-inner flex-row items-center px-4 h-16 shadow-inner gap-3">
+                  <UserIcon size={20} color={themeColors.primary} />
                   <TextInput
                     value={name}
                     onChangeText={setName}
-                    className="flex-1 text-white text-[17px] text-right font-bold w-full"
-                    placeholderTextColor="#475569"
-                    selectionColor="#818cf8"
+                    className="flex-1 text-text-main text-[16px] font-bold"
+                    placeholderTextColor="rgba(255,255,255,0.1)"
+                    selectionColor={themeColors.primary}
                   />
                 </View>
               </MotiView>
 
-              <MotiView from={{ opacity: 0, translateX: 30 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 200, type: 'timing', duration: 400 }}>
-                <Text className="text-indigo-200 text-[12px] font-extrabold uppercase tracking-[3px] text-right mb-2">כתובת אימייל</Text>
-                <View className="bg-black/40 border border-indigo-500/20 rounded-[24px] flex-row-reverse items-center px-5 h-16 shadow-inner relative overflow-hidden">
-                  <LinearGradient colors={['rgba(255,255,255,0.03)', 'transparent']} className="absolute inset-0" />
-                  <Mail size={22} color="#818cf8" className="ml-4" />
+              <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 200 }}>
+                <Text className="text-text-dim text-[10px] font-black uppercase tracking-[3px] mb-2 opacity-60">כתובת אימייל</Text>
+                <View className="bg-surface-low border border-white/5 rounded-inner flex-row items-center px-4 h-16 shadow-inner gap-3">
+                  <Mail size={20} color={themeColors.primary} />
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
-                    className="flex-1 text-white text-[17px] text-right font-bold w-full"
+                    className="flex-1 text-text-main text-[16px] font-bold"
                     keyboardType="email-address"
-                    placeholderTextColor="#475569"
-                    selectionColor="#818cf8"
+                    placeholderTextColor="rgba(255,255,255,0.1)"
+                    selectionColor={themeColors.primary}
                   />
                 </View>
               </MotiView>
 
-              <MotiView from={{ opacity: 0, translateX: 30 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 300, type: 'timing', duration: 400 }}>
-                <Text className="text-indigo-200 text-[12px] font-extrabold uppercase tracking-[3px] text-right mb-2">הגדרות אבטחה</Text>
-                <TouchableOpacity activeOpacity={0.7} className="bg-black/40 border border-white/10 rounded-[24px] flex-row-reverse items-center justify-between px-5 h-16 overflow-hidden relative">
-                  <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-                  <View className="flex-row-reverse items-center">
-                    <Shield size={22} color="#94a3b8" className="ml-4" />
-                    <Text className="text-white text-[17px] font-extrabold">שינוי סיסמה</Text>
+              <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 300 }}>
+                <Text className="text-text-dim text-[10px] font-black uppercase tracking-[3px] mb-2 opacity-60">אבטחה ופרטיות</Text>
+                <TouchableOpacity 
+                    activeOpacity={0.8} 
+                    className="bg-surface-low border border-white/5 rounded-inner flex-row items-center justify-between px-4 h-16"
+                >
+                  <View className="flex-row items-center gap-3">
+                    <Shield size={20} color={themeColors.primary} />
+                    <Text className="text-text-main text-[16px] font-black tracking-tight">שינוי סיסמה תקופתי</Text>
                   </View>
-                  <View className="w-8 h-8 rounded-full bg-white/5 items-center justify-center">
-                    <ChevronRight size={18} color="#94a3b8" style={{ transform: [{ scaleX: -1 }] }} />
-                  </View>
+                  <ChevronLeft size={18} color="rgba(255,255,255,0.2)" />
                 </TouchableOpacity>
               </MotiView>
 
             </View>
 
-            <MotiView from={{ opacity: 0, translateY: 30 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 500, type: 'spring', damping: 15 }}>
+            <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 500 }} className="mt-12">
               <TouchableOpacity 
-                activeOpacity={0.8} 
-                className="mt-14 shadow-2xl shadow-indigo-500/50"
-                onPress={() => {
-                  Alert.alert('הגדרות עודכנו', 'השינויים שלך נשמרו בהצלחה במערכת&rlm;.');
-                  router.back();
-                }}
+                activeOpacity={0.9} 
+                onPress={handleSave}
+                className="h-16 rounded-outer bg-primary flex-row items-center justify-center gap-3 shadow-2xl shadow-primary/20 border border-white/10"
               >
-                <LinearGradient 
-                  colors={['#6366f1', '#4338ca']} 
-                  className="rounded-[28px] flex-row-reverse items-center justify-center p-5 gap-3 border border-indigo-400/30"
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                >
-                  <Save color="#fff" size={24} />
-                  <Text className="text-white text-[18px] font-extrabold uppercase tracking-widest leading-[24px]">שמור שינויים</Text>
-                </LinearGradient>
+                <Save color="#fff" size={20} />
+                <Text className="text-white text-lg font-black tracking-tight">שמור הגדרות מערכת</Text>
               </TouchableOpacity>
             </MotiView>
+
+            {/* Footer Branding */}
+            <View className="mt-16 items-center opacity-20 pb-8">
+              <Cpu size={20} color="#fff" />
+              <Text className="text-[9px] text-white font-black uppercase tracking-[4px] mt-3">SECURE_VAULT v2.4 • ARCHITECT</Text>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

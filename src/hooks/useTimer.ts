@@ -31,11 +31,17 @@ export const useTimer = (workMinutes: number = 25, breakMinutes: number = 5) => 
   }, [mode, workMinutes, breakMinutes]);
 
   useEffect(() => {
+    if (!isActive) {
+      setTimeLeft(mode === 'work' ? workMinutes * 60 : breakMinutes * 60);
+    }
+  }, [workMinutes, breakMinutes, mode, isActive]);
+
+  useEffect(() => {
     if (isActive && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (isActive && timeLeft === 0) {
       switchMode();
     }
 

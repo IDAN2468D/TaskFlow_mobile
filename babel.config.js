@@ -6,6 +6,7 @@ module.exports = function(api) {
       "nativewind/babel",
     ],
     plugins: [
+      "babel-plugin-react-compiler",
       "react-native-reanimated/plugin",
     ],
   };

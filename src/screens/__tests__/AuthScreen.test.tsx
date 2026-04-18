@@ -19,26 +19,26 @@ jest.mock('../../services/authService', () => ({
 describe('AuthScreen Smoke Test', () => {
   it('renders correctly', () => {
     const { getByPlaceholderText, getByText } = render(
-      <AuthScreen navigation={mockNavigation} />
+      <AuthScreen />
     );
     
     expect(getByPlaceholderText('כתובת אימייל')).toBeTruthy();
     expect(getByPlaceholderText('סיסמה')).toBeTruthy();
-    expect(getByText('התחברות')).toBeTruthy();
+    expect(getByText('התחברות למערכת')).toBeTruthy();
   });
 
   it('toggles between login and register', () => {
     const { getByText, queryByPlaceholderText, getByPlaceholderText } = render(
-      <AuthScreen navigation={mockNavigation} />
+      <AuthScreen />
     );
     
     // Default is login, so no "Full Name"
     expect(queryByPlaceholderText('שם מלא')).toBeNull();
     
     // Toggle to register
-    fireEvent.press(getByText('הירשם עכשיו'));
+    fireEvent.press(getByText('צור חשבון'));
     
     expect(getByPlaceholderText('שם מלא')).toBeTruthy();
-    expect(getByText('הרשמה')).toBeTruthy();
+    expect(getByText('יצירת חשבון חדש')).toBeTruthy();
   });
 });

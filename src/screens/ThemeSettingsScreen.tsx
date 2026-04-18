@@ -36,34 +36,46 @@ export default function ThemeSettingsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: themeColors.background }}>
       <SafeAreaView className="flex-1" edges={['top']}>
-        {/* Header */}
-        <View className="flex-row-reverse items-center justify-between px-6 pt-4 pb-4">
+        <View className="flex-row items-center justify-between px-6 py-4">
+          <View className="flex-row items-center gap-4">
+            <View className="w-12 h-12 rounded-outer bg-surface-low items-center justify-center border border-white/5 shadow-2xl">
+              <Palette size={24} color={themeColors.primary} />
+            </View>
+            <View>
+              <Text className="text-text-main text-3xl font-black tracking-tighter">התאמה אישית</Text>
+              <View className="flex-row items-center gap-1.5 mt-1">
+                <View className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-2xl" />
+                <Text className="text-text-dim text-[10px] font-black uppercase tracking-widest opacity-60">VISUAL_ENGINE_ACTIVE</Text>
+              </View>
+            </View>
+          </View>
           <TouchableOpacity 
-            onPress={() => router.back()}
-            className="w-12 h-12 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-md"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }}
+            className="w-10 h-10 rounded-inner bg-surface-low items-center justify-center border border-white/5"
           >
-            <ChevronRight color="#fff" size={24} />
+            <ChevronRight size={24} color="#fff" />
           </TouchableOpacity>
-          <Text className="text-[22px] font-extrabold text-white tracking-widest">התאמה אישית</Text>
-          <View className="w-12 h-12" />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 60 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
           
           <MotiView
              from={{ opacity: 0, translateY: -20 }}
              animate={{ opacity: 1, translateY: 0 }}
              transition={{ type: 'spring', damping: 20 }}
-             className="mb-10 items-end relative"
+             className="mb-8 relative"
           >
-            <View style={{ backgroundColor: themeColors.primary + '33' }} className="absolute right-0 -top-10 w-32 h-32 rounded-full blur-[40px]" />
-            <View className="flex-row-reverse items-center gap-4 mb-3">
-              <View style={{ backgroundColor: themeColors.primary + '1A', borderColor: themeColors.primary + '4D' }} className="w-14 h-14 rounded-[20px] items-center justify-center border">
+            <View style={{ backgroundColor: themeColors.primary + '33' }} className="absolute end-0 -top-10 w-32 h-32 rounded-full blur-[40px]" />
+            <View className="flex-row items-center gap-4 mb-3">
+              <View className="w-14 h-14 rounded-inner bg-surface-low items-center justify-center border border-white/5 shadow-2xl">
                 <Palette color={themeColors.primary} size={28} />
               </View>
-              <Text className="text-white text-[32px] font-extrabold text-right tracking-tight shadow-md">צבעי מערכת</Text>
+              <Text className="text-text-main text-3xl font-black tracking-tighter">צבעי מערכת</Text>
             </View>
-            <Text className="text-slate-400 text-[15px] text-right font-medium leading-[24px]">
+            <Text className="text-text-dim text-sm font-bold leading-5 opacity-70">
               בחר את הסגנון הויזואלי שיעניק לך את חווית העבודה המושלמת. המערכת תתאים את עצמה באופן מיידי לבחירתך.
             </Text>
           </MotiView>
@@ -75,13 +87,13 @@ export default function ThemeSettingsScreen() {
                 from={{ opacity: 0, translateX: 50, scale: 0.95 }}
                 animate={{ opacity: 1, translateX: 0, scale: 1 }}
                 transition={{ delay: i * 150 + 100, type: 'spring', damping: 20 }}
-                className="mb-5"
+                className="mb-4"
               >
                 <TouchableOpacity 
                   activeOpacity={0.8}
                   onPress={() => handleThemeChange(theme.id)}
                   style={{ borderColor: themeId === theme.id ? themeColors.primary : 'rgba(255,255,255,0.05)' }}
-                  className={`bg-black/40 rounded-[28px] border overflow-hidden p-5 shadow-2xl relative`}
+                  className="bg-surface-low rounded-outer border overflow-hidden p-4 shadow-2xl relative"
                 >
                   <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
                   
@@ -89,9 +101,9 @@ export default function ThemeSettingsScreen() {
                      <View style={{ backgroundColor: themeColors.primary + '1A' }} className="absolute inset-0" />
                   )}
 
-                  <View className="flex-row-reverse items-center justify-between">
+                  <View className="flex-row items-center justify-between">
                     {/* Theme Gradient preview */}
-                    <View className="w-16 h-16 rounded-[20px] overflow-hidden border-2 border-white/10 shadow-lg shadow-black/50 ml-5 relative">
+                    <View className="w-14 h-14 rounded-inner overflow-hidden border-2 border-white/10 shadow-lg shadow-black/50 relative">
                       <LinearGradient 
                         colors={theme.activeColors as [string, string, ...string[]]} 
                         className="flex-1"
@@ -104,16 +116,16 @@ export default function ThemeSettingsScreen() {
                       )}
                     </View>
                     
-                    <View className="flex-1 items-end">
-                      <View className="flex-row-reverse items-center gap-2 mb-1">
-                        <Text className="text-white text-[19px] font-extrabold text-right tracking-tight">{theme.name}</Text>
+                    <View className="flex-1 px-4">
+                      <View className="flex-row items-center gap-2 mb-1">
+                        <Text className="text-white text-[18px] font-extrabold tracking-tight">{theme.name}</Text>
                         {themeId === theme.id && (
                           <View style={{ backgroundColor: themeColors.primary + '33', borderColor: themeColors.primary + '4D' }} className="px-2 py-0.5 rounded-full border">
                             <Text style={{ color: themeColors.primary }} className="text-[10px] font-extrabold uppercase">נבחר</Text>
                           </View>
                         )}
                       </View>
-                      <Text className="text-slate-400 text-[13px] font-medium text-right leading-[18px]">{theme.subtitle}</Text>
+                      <Text className="text-slate-400 text-[12px] font-medium leading-[18px]">{theme.subtitle}</Text>
                     </View>
 
                     <View 
@@ -121,9 +133,9 @@ export default function ThemeSettingsScreen() {
                         backgroundColor: themeId === theme.id ? themeColors.primary : 'transparent', 
                         borderColor: themeId === theme.id ? themeColors.primary : 'rgba(255,255,255,0.1)' 
                       }} 
-                      className={`w-7 h-7 rounded-full items-center justify-center border-2 mr-2`}
+                      className={`w-6 h-6 rounded-full items-center justify-center border-2`}
                     >
-                      {themeId === theme.id && <Check size={14} color="#fff" strokeWidth={3} />}
+                      {themeId === theme.id && <Check size={12} color="#fff" strokeWidth={3} />}
                     </View>
                   </View>
                 </TouchableOpacity>

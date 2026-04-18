@@ -73,7 +73,7 @@ export default function SmartInputModal({ bottomSheetRef, onSubmit }: SmartInput
         <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.8} />
       )}
     >
-      <BottomSheetView className="p-8 flex-1">
+      <BottomSheetView className="p-6 flex-1">
         {/* Background Decorative Orb */}
         <View 
           style={{ backgroundColor: themeColors.primary + '1A', position: 'absolute', top: -50, left: -50, width: 200, height: 200, borderRadius: 100 }} 
@@ -81,22 +81,22 @@ export default function SmartInputModal({ bottomSheetRef, onSubmit }: SmartInput
         />
 
         {/* Header Section */}
-        <View className="flex-row-reverse items-center justify-between mb-8 z-10">
-          <View className="flex-row-reverse items-center gap-4">
+        <View className="flex-row items-center justify-between mb-6 z-10">
+          <View className="flex-row items-center gap-4">
             <MotiView
               animate={{ rotate: '360deg' }}
               transition={{ loop: true, duration: 8000, type: 'timing', easing: Easing.bezier(0, 0, 1, 1) }}
-              className="p-[1.5px] rounded-[18px] overflow-hidden"
+              className="p-[1.5px] rounded-[14px] overflow-hidden"
             >
               <LinearGradient colors={[themeColors.primary, themeColors.accent, themeColors.primary]} className="w-12 h-12 items-center justify-center">
-                <View style={{ backgroundColor: themeColors.background }} className="w-[44px] h-[44px] rounded-[17px] items-center justify-center">
+                <View style={{ backgroundColor: themeColors.background }} className="w-[44px] h-[44px] rounded-[13px] items-center justify-center">
                   <Sparkles color={themeColors.primary} size={22} />
                 </View>
               </LinearGradient>
             </MotiView>
-            <View>
-              <Text className="text-white font-black text-[24px] text-right tracking-tight leading-none">תכנון AI חכם</Text>
-              <Text className="text-slate-500 text-[12px] font-black text-right mt-1 tracking-widest uppercase opacity-70">Oliver Multi-Chain AI</Text>
+            <View className="items-start">
+              <Text className="text-white font-black text-[22px] tracking-tight leading-none">תכנון AI חכם</Text>
+              <Text className="text-slate-500 text-[11px] font-black mt-1 tracking-widest uppercase opacity-70">Oliver Multi-Chain AI</Text>
             </View>
           </View>
           
@@ -109,14 +109,15 @@ export default function SmartInputModal({ bottomSheetRef, onSubmit }: SmartInput
         </View>
 
         {/* Suggestion Scroll */}
-        <View className="mb-8" style={{ height: 55 }}>
+        <View className="mb-6" style={{ height: 48 }}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ 
-              paddingLeft: 4, 
-              flexDirection: 'row-reverse',
-              alignItems: 'center'
+              paddingHorizontal: 4, 
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10
             }}
           >
             {SUGGESTIONS.map((s, i) => (
@@ -129,13 +130,13 @@ export default function SmartInputModal({ bottomSheetRef, onSubmit }: SmartInput
                 <TouchableOpacity
                   onPress={() => handleSuggestion(s.text)}
                   activeOpacity={0.7}
-                  style={{ marginLeft: 12, backgroundColor: themeColors.secondary, borderColor: 'rgba(255,255,255,0.05)' }}
-                  className="flex-row-reverse items-center gap-2.5 px-5 py-3 rounded-2xl border shadow-lg"
+                  style={{ backgroundColor: themeColors.secondary, borderColor: 'rgba(255,255,255,0.05)' }}
+                  className="flex-row items-center gap-2 px-4 py-2.5 rounded-[12px] border"
                 >
-                  <View style={{ backgroundColor: s.bg }} className="w-6 h-6 rounded-lg items-center justify-center">
-                    <s.icon color={s.color} size={13} strokeWidth={2.5} />
+                  <View style={{ backgroundColor: s.bg }} className="w-5 h-5 rounded-[6px] items-center justify-center">
+                    <s.icon color={s.color} size={11} strokeWidth={2.5} />
                   </View>
-                  <Text className="text-white/90 font-black text-[13.5px] tracking-tight">{s.text}</Text>
+                  <Text className="text-white/90 font-bold text-[13px] tracking-tight">{s.text}</Text>
                 </TouchableOpacity>
               </MotiView>
             ))}
@@ -147,7 +148,7 @@ export default function SmartInputModal({ bottomSheetRef, onSubmit }: SmartInput
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
           style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)' }}
-          className="flex-1 rounded-[40px] border p-6 shadow-2xl relative overflow-hidden mb-4"
+          className="flex-1 rounded-[14px] border p-5 shadow-2xl relative overflow-hidden mb-4"
         >
           <LinearGradient colors={['rgba(99, 102, 241, 0.05)', 'transparent']} className="absolute inset-0" />
           
@@ -158,38 +159,37 @@ export default function SmartInputModal({ bottomSheetRef, onSubmit }: SmartInput
             value={text}
             onChangeText={setText}
             style={[styles.input, { color: '#fff' }]}
-            textAlign="right"
           />
           
-          <View className="flex-row-reverse justify-between items-center mt-6 pt-4 border-t border-white/5">
+          <View className="flex-row justify-between items-center mt-6 pt-4 border-t border-white/5">
             {/* Mic Button */}
             <TouchableOpacity 
               onPress={handleMicPress}
-              className={`w-14 h-14 rounded-[22px] justify-center items-center border ${isRecording ? 'bg-red-500/10 border-red-500/30' : 'bg-white/5 border-white/10'}`}
+              className={`w-14 h-14 rounded-[14px] justify-center items-center border ${isRecording ? 'bg-red-500/10 border-red-500/30' : 'bg-white/5 border-white/10'}`}
             >
               {isRecording && (
                 <MotiView
                   from={{ scale: 1, opacity: 0.6 }}
                   animate={{ scale: 2, opacity: 0 }}
                   transition={{ loop: true, duration: 1500, type: 'timing', easing: Easing.bezier(0.25, 0.1, 0.25, 1) }}
-                  className="absolute inset-0 bg-red-500 rounded-[22px]"
+                  className="absolute inset-0 bg-red-500 rounded-[14px]"
                 />
               )}
               <Mic color={isRecording ? "#ef4444" : themeColors.accent} size={26} strokeWidth={2} />
             </TouchableOpacity>
-
+ 
             {/* Submit Button */}
             <TouchableOpacity 
               onPress={handleSubmit}
               disabled={!text.trim()}
               activeOpacity={0.9}
-              className={`overflow-hidden rounded-[24px] shadow-2xl ${!text.trim() ? 'opacity-30' : 'shadow-indigo-500/50'}`}
+              className={`overflow-hidden rounded-[14px] shadow-2xl ${!text.trim() ? 'opacity-30' : 'shadow-indigo-500/50'}`}
             >
               <LinearGradient 
                 colors={[themeColors.accent, themeColors.primary, themeColors.primary]} 
                 start={{ x: 0, y: 0 }} 
                 end={{ x: 1, y: 1 }} 
-                className="flex-row-reverse items-center px-10 py-4 gap-4"
+                className="flex-row items-center px-10 py-4 gap-4"
               >
                 <Text className="text-white font-black text-[16px] uppercase tracking-tighter">צור משימות</Text>
                 <Send color="#fff" size={20} strokeWidth={3} />

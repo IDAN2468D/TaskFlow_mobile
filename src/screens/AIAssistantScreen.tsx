@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,43 +9,43 @@ import {
   Platform,
   ActivityIndicator,
   InteractionManager,
-  Dimensions
+  Dimensions,
+  StatusBar
 } from 'react-native';
-import { Easing } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView, AnimatePresence } from 'moti';
 import { 
-  Brain, 
-  ArrowUp, 
-  Clock, 
+  BrainCircuit, 
   Sparkles, 
-  LayoutList, 
   Mic, 
   Square, 
-  Info, 
-  HelpCircle,
   TrendingUp,
   Zap,
-  Bell,
   Rocket,
-  Lightbulb
+  Lightbulb,
+  Waves,
+  Activity,
+  Target,
+  Bot,
+  Command,
+  Cpu,
+  ArrowRight,
+  ChevronRight,
+  Settings,
+  ShieldCheck,
+  Signal
 } from 'lucide-react-native';
-import { AIPulseCard } from '../components/ai/AIPulseCard';
-import { TaskRiskBadge } from '../components/ai/TaskRiskBadge';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useAIAssistant } from '../hooks/useAIAssistant';
-import VoiceToTaskMobile from '../components/ai/VoiceToTaskMobile';
-
 import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const SUGGESTIONS = [
   { text: 'תכנן לי פרויקט', icon: Rocket, color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.1)' },
-  { text: 'פרק לי משימה', icon: Brain, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
-  { text: 'לו״ז למידה', icon: Lightbulb, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' },
+  { text: 'פרק לי משימה', icon: BrainCircuit, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' },
+  { text: 'לו״ז למידה', icon: Lightbulb, color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
   { text: 'אופטימיזציה', icon: Zap, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
 ];
 
@@ -54,36 +54,20 @@ export default function AIAssistantScreen() {
   const [isReady, setIsReady] = React.useState(false);
   const [recording, setRecording] = React.useState<any>(null);
   const [isVoiceProcessing, setIsVoiceProcessing] = React.useState(false);
-  const [showTooltip, setShowTooltip] = React.useState<string | null>(null);
   const { prompt, setPrompt, loading, result, setResult, generateTask } = useAIAssistant();
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReady(true);
-    }, 500);
-
+  useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       setIsReady(true);
-      clearTimeout(timer);
     });
-    
-    return () => {
-      clearTimeout(timer);
-      task.cancel();
-    };
+    return () => task.cancel();
   }, []);
 
   async function startRecording() {
     let AudioModule;
-    let isMock = false;
     try {
       AudioModule = require('expo-av').Audio;
-      if (!AudioModule) throw new Error('Native module missing');
     } catch (e) {
-      isMock = true;
-    }
-
-    if (isMock) {
       setRecording({ isMock: true });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       return;
@@ -116,7 +100,7 @@ export default function AIAssistantScreen() {
       setRecording(null);
       setIsVoiceProcessing(true);
       setTimeout(() => {
-        setPrompt('תכנן לי משימות למיזם החדש שלי');
+        setPrompt('תכנן לי משימות לפרויקט החדש שלי');
         setIsVoiceProcessing(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }, 1500);
@@ -129,7 +113,7 @@ export default function AIAssistantScreen() {
       setIsVoiceProcessing(true);
       setTimeout(() => {
         setIsVoiceProcessing(false);
-        setPrompt('תכנן לי משימוט פיתוח לאפליקציית ניהול משימות');
+        setPrompt('תכנן לי משימות פיתוח לאפליקציית ניהול משימות');
       }, 2000);
     } catch (err) {
       console.error('Failed to stop recording', err);
@@ -145,285 +129,313 @@ export default function AIAssistantScreen() {
   const renderResult = () => {
     if (!result) return null;
     return (
-      <MotiView
-        from={{ opacity: 0, scale: 0.95, translateY: 30 }}
-        animate={{ opacity: 1, scale: 1, translateY: 0 }}
-        transition={{ type: 'spring', damping: 15 }}
-        style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', borderColor: 'rgba(255, 255, 255, 0.08)' }}
-        className="rounded-[40px] p-8 border shadow-2xl relative overflow-hidden"
-      >
-        <LinearGradient colors={['rgba(99, 102, 241, 0.1)', 'transparent']} className="absolute inset-0" />
-        
-        <View className="flex-row-reverse items-center justify-between mb-8">
-          <View className="flex-row-reverse items-center gap-3">
-            <View className="w-10 h-10 rounded-xl bg-indigo-500/20 items-center justify-center border border-indigo-500/30">
-              <Sparkles size={20} color="#818cf8" />
-            </View>
-            <Text className="text-white font-black text-[22px] tracking-tight text-right">הצעת אוליבר</Text>
-          </View>
-          <TaskRiskBadge level="Low" />
-        </View>
-
-        <Text className="text-white font-black text-[28px] text-right leading-tight mb-4 tracking-tighter">
-          {result.title}
-        </Text>
-        
-        <Text className="text-slate-400 text-[16px] text-right font-bold leading-[24px] mb-8">
-          {result.description}
-        </Text>
-
-        <View className="bg-black/20 rounded-[32px] p-6 border border-white/5 mb-8">
-          <View className="flex-row-reverse items-center gap-3 mb-6">
-            <Clock size={18} color={themeColors.primary} />
-            <Text className="text-white font-black text-[14px] uppercase tracking-widest leading-none text-right">תתי-משימות שנוצרו</Text>
-          </View>
-          
-          {result.subTasks.map((st: any, i: number) => (
-            <MotiView 
-              key={i} 
-              from={{ opacity: 0, translateX: 20 }}
-              animate={{ opacity: 1, translateX: 0 }}
-              transition={{ delay: 300 + (i * 100) }}
-              className="flex-row-reverse items-center justify-between py-4 border-b border-white/5 last:border-0"
-            >
-              <View className="flex-row-reverse items-center gap-4 flex-1">
-                <View className="w-8 h-8 rounded-lg bg-white/5 items-center justify-center border border-white/10">
-                  <Text style={{ color: themeColors.primary }} className="font-black text-[12px]">{i + 1}</Text>
-                </View>
-                <Text className="text-slate-200 font-bold text-[15px] flex-1 text-right">{st.title}</Text>
-              </View>
-              <View className="bg-white/5 px-3 py-1 rounded-full border border-white/10 mr-4">
-                <Text className="text-slate-500 text-[10px] font-black">{st.estimatedTime} דק׳</Text>
-              </View>
-            </MotiView>
-          ))}
-        </View>
-
-        <View className="bg-indigo-500/5 rounded-[24px] p-6 border border-indigo-500/10">
-          <View className="flex-row-reverse items-center gap-3 mb-3">
-            <Brain size={18} color="#818cf8" />
-            <Text className="text-indigo-300 font-black text-[12px] uppercase tracking-widest text-right">תובנות אוליבר (AI Insight)</Text>
-          </View>
-          <Text className="text-slate-300 text-[14px] leading-[22px] text-right font-medium italic">
-            {result.aiInsights}
-          </Text>
-        </View>
-
-        <TouchableOpacity 
-          style={{ backgroundColor: themeColors.primary }}
-          className="mt-10 h-16 rounded-[24px] items-center justify-center shadow-xl shadow-indigo-500/40"
-          onPress={() => {
-             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-             setResult(null);
-             setPrompt('');
-             router.push('/home');
-          }}
+      <View className="mt-4 gap-y-4">
+        <MotiView 
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-outer bg-surface-low p-6 border border-white/5 shadow-2xl"
         >
-          <Text className="text-white font-black text-[18px]">אשר והוסף ללו״ז שלי</Text>
+          <View className="flex-row items-center justify-between mb-6">
+            <View className="flex-row items-center gap-3">
+              <View className="w-10 h-10 rounded-inner bg-surface-mid justify-center items-center border border-white/5 shadow-xl">
+                <Sparkles size={20} color={themeColors.primary} />
+              </View>
+              <View className="items-start">
+                  <Text className="text-text-dim text-[10px] font-black tracking-[2px] uppercase opacity-60">NEURAL SYNTHESIS READY</Text>
+                  <Text className="text-text-main text-xl font-black tracking-tight">הצעת המוח המרכזי</Text>
+              </View>
+            </View>
+            <View className="bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <Text className="text-emerald-400 text-[10px] font-black tracking-[1px] uppercase">OPTIMIZED</Text>
+            </View>
+          </View>
+
+          <Text className="text-text-main text-2xl font-black mb-3 tracking-tighter">
+            {result.title}
+          </Text>
+          
+          <Text className="text-text-dim text-sm font-bold leading-6 mb-6 opacity-80">
+            {result.description}
+          </Text>
+
+          <View className="bg-surface-mid/50 rounded-inner p-4 border border-white/5 mb-6">
+            <View className="flex-row items-center gap-2 mb-4">
+              <View className="w-1 h-4 rounded-full bg-primary" />
+              <Text className="text-primary text-[10px] font-black uppercase tracking-[1.5px]">ארכיטקטורת פעולה</Text>
+            </View>
+            
+            {result.subTasks.map((st: any, i: number) => (
+              <MotiView 
+                key={i} 
+                from={{ opacity: 0, translateX: 10 }}
+                animate={{ opacity: 1, translateX: 0 }}
+                transition={{ delay: i * 100 }}
+                className={`flex-row items-start justify-between py-3 gap-3 ${i < result.subTasks.length - 1 ? 'border-b border-white/5' : ''}`}
+              >
+                <View className="flex-row items-start gap-3 flex-1">
+                  <View className="w-7 h-7 rounded-inner bg-surface-low border border-white/5 justify-center items-center">
+                    <Text className="text-primary font-black text-xs">{i + 1}</Text>
+                  </View>
+                  <View className="flex-1">
+                      <Text className="text-text-main text-[15px] font-black mb-0.5 tracking-tight">{st.title}</Text>
+                      <Text className="text-text-dim text-[10px] font-bold italic opacity-40">מיקרו-משימה {i + 1}</Text>
+                  </View>
+                </View>
+                <View className="bg-surface-low px-2 py-1 rounded-inner border border-white/5">
+                  <Text className="text-text-dim text-[10px] font-black tracking-tight">{st.estimatedTime}m</Text>
+                </View>
+              </MotiView>
+            ))}
+          </View>
+
+          <View className="bg-surface-mid/30 rounded-inner p-4 border border-white/5 mb-6">
+            <View className="flex-row items-center gap-2 mb-2">
+              <View className="w-6 h-6 rounded-inner bg-primary/10 items-center justify-center border border-primary/20">
+                  <BrainCircuit size={14} color={themeColors.primary} />
+              </View>
+              <Text className="text-primary text-[10px] font-black uppercase tracking-[1.5px]">תובנה מוחית</Text>
+            </View>
+            <Text className="text-text-dim text-[13px] font-bold leading-5 italic opacity-80">
+              "{result.aiInsights}"
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            className="h-[60px] rounded-outer bg-primary flex-row items-center justify-center gap-3 px-6 shadow-2xl"
+            activeOpacity={0.9}
+            onPress={() => {
+               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+               setResult(null);
+               setPrompt('');
+               router.replace('/home');
+            }}
+          >
+            <Text className="text-white text-lg font-black tracking-tight">סנכרן ללוח העבודה</Text>
+            <Zap size={20} color="#fff" fill="#fff" />
+          </TouchableOpacity>
+        </MotiView>
+        
+        <TouchableOpacity 
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setResult(null);
+          }}
+          className="mt-4 items-center"
+        >
+          <View className="flex-row items-center gap-2 bg-surface-low px-5 py-3 rounded-full border border-white/5">
+            <ArrowRight size={14} color={themeColors.primary} />
+            <Text className="text-text-dim text-xs font-black">צור משהו חדש</Text>
+          </View>
         </TouchableOpacity>
-      </MotiView>
+      </View>
     );
   };
 
   if (!isReady) {
     return (
-      <View className="flex-1 bg-obsidian items-center justify-center">
-        <ActivityIndicator color={themeColors.primary} size="small" />
+      <View className="flex-1 bg-obsidian justify-center items-center">
+        <ActivityIndicator color={themeColors.primary} size="large" />
       </View>
     );
   }
 
   return (
     <View className="flex-1 bg-obsidian">
-      <LinearGradient 
-        colors={['rgba(99, 102, 241, 0.12)', 'transparent']} 
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 400 }} 
-      />
-      
-      <SafeAreaView className="flex-1" edges={['top']}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 24, paddingBottom: 160 }}>
-            
-            {/* Dynamic Header Section */}
-            <View className="flex-row-reverse items-center justify-between px-6 pt-4 mb-2">
-              <View>
-                <Text className="text-white/60 font-bold text-[14px] text-right">בוקר טוב,</Text>
-                <Text className="text-white font-black text-[26px] text-right leading-none">משתמש</Text>
-              </View>
-              <TouchableOpacity 
-                onPress={() => router.push('/notifications')}
-                className="w-12 h-12 bg-white/5 rounded-2xl items-center justify-center border border-white/10"
-              >
-                <View className="relative">
-                  <Bell size={24} color="#fff" />
-                  <View style={{ backgroundColor: themeColors.primary, borderColor: themeColors.background }} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2" />
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            {/* Quick Suggestions */}
-            <View className="mt-8 px-6">
-               <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ flexDirection: 'row-reverse', alignItems: 'center', paddingLeft: 4 }}
-                >
-                  {SUGGESTIONS.map((s, i) => (
-                    <MotiView
-                      key={i}
-                      from={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 100, type: 'spring' }}
-                    >
-                      <TouchableOpacity
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          setPrompt(s.text);
-                        }}
-                        activeOpacity={0.7}
-                        style={{ marginLeft: 12, backgroundColor: themeColors.secondary, borderColor: 'rgba(255,255,255,0.05)' }}
-                        className="flex-row-reverse items-center gap-2.5 px-5 py-3 rounded-2xl border shadow-lg"
-                      >
-                        <View style={{ backgroundColor: s.bg }} className="w-6 h-6 rounded-lg items-center justify-center">
-                          <s.icon color={s.color} size={13} strokeWidth={2.5} />
-                        </View>
-                        <Text className="text-white/90 font-black text-[13.5px] tracking-tight">{s.text}</Text>
-                      </TouchableOpacity>
-                    </MotiView>
-                  ))}
-                </ScrollView>
-            </View>
-
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false} 
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+            className="flex-1"
+          >
+            {/* Standardized Obsidian Header */}
             <MotiView
-              from={{ opacity: 0, translateY: -20 }}
+              from={{ opacity: 0, translateY: -10 }}
               animate={{ opacity: 1, translateY: 0 }}
-              className="flex-row-reverse items-center justify-between mb-10 bg-white/5 p-6 rounded-[40px] border border-white/10 backdrop-blur-3xl mt-12"
+              className="px-6 pt-4 pb-6 border-b border-white/5"
             >
-              <View className="flex-row-reverse items-center gap-4">
-                <View className="relative">
-                  <MotiView 
-                    animate={{ rotate: '360deg' }}
-                    transition={{ loop: true, duration: 10000, type: 'timing', easing: Easing.bezier(0, 0, 1, 1) }}
-                    className="p-[1px] rounded-2xl"
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-4">
+                  <TouchableOpacity 
+                    onPress={() => {
+                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                       router.back();
+                    }}
+                    className="w-12 h-12 rounded-outer bg-surface-low justify-center items-center border border-white/5"
                   >
-                    <LinearGradient colors={['#6366f1', '#a855f7']} className="w-14 h-14 rounded-2xl items-center justify-center shadow-lg shadow-indigo-500/40">
-                      <Brain color="#fff" size={28} strokeWidth={2.5} />
-                    </LinearGradient>
-                  </MotiView>
+                    <ChevronRight size={24} color="#fff" />
+                  </TouchableOpacity>
+                  <View className="items-start">
+                    <View className="flex-row items-center gap-1.5 mb-0.5">
+                       <View className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />
+                       <Text className="text-text-dim text-[10px] font-black uppercase tracking-[2px]">NEURAL_PROTOCOL_ACTIVE</Text>
+                    </View>
+                    <Text className="text-text-main text-2xl font-black tracking-tighter">העוזר המרכזי</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text className="text-white font-black text-[24px] text-right tracking-tighter leading-none">עוזר AI</Text>
-                  <Text className="text-indigo-400 font-bold text-[11px] text-right mt-1 tracking-widest uppercase">Agent Oliver v2.4</Text>
+                
+                <View className="w-10 h-10 rounded-inner bg-surface-mid items-center justify-center border border-white/5">
+                   <Bot size={20} color={themeColors.primary} />
                 </View>
-              </View>
-              
-              <View className="flex-row-reverse gap-3">
-                <TouchableOpacity className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 items-center justify-center">
-                   <HelpCircle size={20} color="#64748b" />
-                </TouchableOpacity>
               </View>
             </MotiView>
 
-            <AnimatePresence>
-              {!result && (
-                <MotiView
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#18181b]/80 rounded-[40px] border border-white/10 p-4 shadow-2xl relative overflow-hidden"
-                >
-                  <LinearGradient colors={['rgba(255,255,255,0.02)', 'transparent']} className="absolute inset-0" />
-                  
-                  <View className="p-4">
+            {!result && (
+              <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                {/* Prompt Suggestions */}
+                <View className="mb-6">
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ flexDirection: 'row', gap: 8 }}
+                  >
+                    {SUGGESTIONS.map((s, i) => (
+                       <MotiView
+                        key={i}
+                        from={{ opacity: 0, scale: 0.9, translateY: 10 }}
+                        animate={{ opacity: 1, scale: 1, translateY: 0 }}
+                        transition={{ delay: i * 100 }}
+                      >
+                        <TouchableOpacity
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setPrompt(s.text);
+                          }}
+                          className="flex-row items-center px-4 py-2.5 rounded-inner bg-surface-low border border-white/5 gap-3"
+                        >
+                          <View className="w-6 h-6 rounded bg-surface-mid justify-center items-center">
+                            <s.icon color={s.color} size={14} />
+                          </View>
+                          <Text className="text-text-main text-sm font-black tracking-tight">{s.text}</Text>
+                        </TouchableOpacity>
+                      </MotiView>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                {/* Input Neural Hub */}
+                <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }}>
+                  <View className="rounded-outer bg-surface-low p-6 border border-white/5 shadow-2xl">
+                     <View className="flex-row items-center justify-between mb-6">
+                         <View className="flex-row items-center gap-3">
+                             <View className="w-8 h-8 rounded-inner bg-surface-mid items-center justify-center border border-white/5">
+                               <Signal size={16} color={themeColors.primary} />
+                             </View>
+                             <Text className="text-text-dim text-[10px] font-black uppercase tracking-[4px] opacity-60">SIGNAL_CAPTURE</Text>
+                         </View>
+                         <Activity size={16} color={themeColors.primary} opacity={0.2} />
+                     </View>
+
                     <TextInput
                       multiline
-                      placeholder="תאר את הפרויקט או המשימה שאתה רוצה לפרק..."
-                      placeholderTextColor="#4b5563"
+                      placeholder="תאר את הרעיון שלך... נבנה ממנו תוכנית פעולה"
+                      placeholderTextColor="rgba(255,255,255,0.1)"
                       value={prompt}
                       onChangeText={setPrompt}
-                      className="text-white text-[19px] min-h-[160px] font-bold text-right leading-[28px]"
+                      className="text-text-main text-lg font-bold leading-7 min-h-[150px]"
                       textAlignVertical="top"
-                      textAlign="right"
                     />
-                  </View>
 
-                  <View className="flex-row-reverse justify-between items-center p-2 mt-4 gap-4">
-                    <TouchableOpacity 
-                      onPress={recording ? stopRecording : startRecording}
-                      className={`w-14 h-14 rounded-[22px] items-center justify-center border transition-all ${recording ? 'bg-red-500 border-red-400 shadow-lg shadow-red-500/40' : 'bg-white/5 border-white/10'}`}
-                    >
-                      {recording ? <Square color="#fff" size={24} fill="#fff" /> : <Mic color={themeColors.accent} size={24} />}
-                    </TouchableOpacity>
+                    <View className="flex-row items-center mt-6 gap-3">
+                      <TouchableOpacity 
+                        onPress={recording ? stopRecording : startRecording}
+                        className={`w-14 h-14 rounded-inner justify-center items-center border border-white/5 shadow-xl ${recording ? 'bg-rose-500/20' : 'bg-surface-mid'}`}
+                      >
+                        {recording ? (
+                          <MotiView
+                            animate={{ scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] }}
+                            transition={{ loop: true, duration: 800 }}
+                          >
+                            <Square color="#f43f5e" size={20} fill="#f43f5e" />
+                          </MotiView>
+                        ) : (
+                          <Mic color={themeColors.primary} size={20} />
+                        )}
+                      </TouchableOpacity>
 
-                    <TouchableOpacity 
-                      disabled={loading || !prompt.trim()}
-                      onPress={handleGenerate}
-                      className={`flex-1 h-14 rounded-[22px] overflow-hidden shadow-2xl ${!prompt.trim() ? 'opacity-30' : 'shadow-indigo-500/40'}`}
-                    >
-                      <LinearGradient colors={['#6366f1', '#4f46e5']} className="flex-1 flex-row-reverse items-center justify-center gap-4 px-6">
+                      <TouchableOpacity 
+                        disabled={loading || !prompt.trim()}
+                        onPress={handleGenerate}
+                        activeOpacity={0.9}
+                        className={`flex-1 h-14 rounded-inner bg-primary flex-row items-center justify-center gap-3 px-6 shadow-2xl ${!prompt.trim() ? 'opacity-20' : ''}`}
+                      >
                         {loading ? (
-                          <ActivityIndicator color="#fff" />
+                          <ActivityIndicator color="#fff" size="small" />
                         ) : (
                           <>
-                            <Text className="text-white font-black text-[16px] uppercase tracking-tighter">ייצר משימות</Text>
-                            <ArrowUp color="#fff" size={20} strokeWidth={3} />
+                            <Text className="text-white text-base font-black tracking-tight">סנתז משימה</Text>
+                            <Zap color="#fff" size={18} fill="#fff" />
                           </>
                         )}
-                      </LinearGradient>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
+                    </View>
                   </View>
+
+                  {/* Optimization Badge */}
+                  <MotiView transition={{ delay: 500 }} className="mt-8 items-center">
+                    <View className="flex-row items-center px-5 py-3 rounded-outer bg-surface-low border border-white/5 gap-3 shadow-xl">
+                      <TrendingUp size={20} color={themeColors.primary} />
+                      <View className="items-start">
+                          <Text className="text-sm font-black text-text-main tracking-tight">אופטימיזציה קוגניטיבית</Text>
+                          <Text className="text-[10px] font-black text-primary uppercase tracking-[2px] mt-0.5 opacity-40">AG_CORE_SYSTEM_ACTIVE</Text>
+                      </View>
+                    </View>
+                  </MotiView>
                 </MotiView>
-              )}
-            </AnimatePresence>
+              </MotiView>
+            )}
 
             <AnimatePresence>
               {result && renderResult()}
             </AnimatePresence>
 
-            {/* Bottom Insight Peek */}
-            {!result && !loading && (
-              <MotiView
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 800 }}
-                className="mt-12 items-center"
-              >
-                <View className="flex-row-reverse items-center gap-2 bg-indigo-500/10 px-4 py-2 rounded-full border border-indigo-500/20">
-                  <TrendingUp size={14} color="#818cf8" />
-                  <Text className="text-indigo-300 font-bold text-[12px]">אוליבר חסך לך 45 דקות עבודה היום</Text>
-                </View>
-              </MotiView>
-            )}
+            {/* Branding Footer */}
+            <View className="mt-16 items-center opacity-20 pb-12">
+               <Cpu size={20} color="#fff" />
+               <Text className="text-[10px] text-white font-black text-center mt-3 tracking-[4px] uppercase">TaskFlow AI • NEURAL_SYNTH_CORE v1.2</Text>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
+      {/* Voice Processing Overlay */}
       <AnimatePresence>
         {isVoiceProcessing && (
           <MotiView
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 z-[100] items-center justify-center p-10"
+            className="absolute inset-0 bg-obsidian/95 z-[1000] justify-center items-center p-8"
           >
-             <MotiView
-               from={{ scale: 0.8, opacity: 0 }}
-               animate={{ scale: 1, opacity: 1 }}
-               className="bg-[#18181b] p-10 rounded-[48px] border border-indigo-500/30 items-center w-full"
-             >
-               <MotiView
-                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                 transition={{ loop: true, duration: 1500 }}
-                 className="w-24 h-24 bg-indigo-500/20 rounded-full items-center justify-center mb-8 border border-indigo-500/30"
-               >
-                 <Brain color="#818cf8" size={48} />
-               </MotiView>
-               <Text className="text-white font-black text-[24px] text-center mb-2">אוליבר מעבד את הקול שלך...</Text>
-               <Text className="text-slate-500 text-center font-bold">הופך קול למשימות חכמות בתוך שניות&rlm;.</Text>
-             </MotiView>
+             <View className="bg-surface-low p-8 rounded-outer border border-white/5 items-center w-full shadow-2xl">
+                <MotiView
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: ['0deg', '90deg', '0deg']
+                  }}
+                  transition={{ loop: true, duration: 3000 }}
+                  className="w-24 h-24 rounded-inner bg-primary/10 justify-center items-center border border-primary/20 mb-8"
+                >
+                  <Waves color={themeColors.primary} size={48} />
+                </MotiView>
+                
+                <Text className="text-text-main text-2xl font-black text-center mb-3">דוגם סיגנל קולי</Text>
+                <Text className="text-text-dim text-sm font-bold text-center leading-5 opacity-70">
+                    מנתח את מבנה הקול לצורך סנכרון תודעתי מלא עם הליבה המרכזית
+                </Text>
+
+                <View className="flex-row items-center gap-3 mt-10">
+                  {[0, 1, 2, 3, 4, 5].map(i => (
+                    <MotiView
+                      key={i}
+                      animate={{ height: [15, 45, 15] }}
+                      transition={{ loop: true, duration: 600, delay: i * 100 }}
+                      className="w-1.5 rounded-full bg-primary"
+                    />
+                  ))}
+                </View>
+             </View>
           </MotiView>
         )}
       </AnimatePresence>

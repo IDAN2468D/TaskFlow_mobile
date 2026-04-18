@@ -7,9 +7,15 @@ import { InteractionManager } from 'react-native';
 /**
  * Executes a function after all interactions have completed.
  * This is the React Native equivalent of requestIdleCallback for UI responsiveness.
+ * It favors requestIdleCallback if available, falling back to InteractionManager.
  */
-export const runIdle = (fn: () => void) => {
-  InteractionManager.runAfterInteractions(() => {
+export const executeOnIdle = (fn: () => void) => {
+  if (typeof requestIdleCallback !== 'undefined') {
+    const handle = requestIdleCallback(fn);
+    return { cancel: () => cancelIdleCallback(handle) };
+  }
+  
+  return InteractionManager.runAfterInteractions(() => {
     fn();
   });
 };
@@ -31,9 +37,9 @@ export function chunkWork<T>(
     }
 
     if (index < items.length) {
-      runIdle(doChunk);
+      executeOnIdle(doChunk);
     }
   };
 
-  runIdle(doChunk);
+  executeOnIdle(doChunk);
 }
