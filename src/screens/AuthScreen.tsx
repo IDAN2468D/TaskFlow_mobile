@@ -45,7 +45,7 @@ export default function AuthScreen() {
       // 1. The local return URL for Expo Go and APK
       const returnUrl = makeRedirectUri({ 
         scheme: 'taskflow-ai',
-        path: 'oauthredirect' 
+        path: 'auth' 
       });
 
       // 2. The proxy redirect URL that Google is allowed to redirect to
