@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ActivityIndicator,
-  StatusBar
+  StatusBar,
+  Alert
 } from 'react-native';
 import { MotiView } from 'moti';
 import * as WebBrowser from 'expo-web-browser';
@@ -74,10 +75,15 @@ export default function AuthScreen() {
         const idToken = url.match(/id_token=([^&]+)/)?.[1];
         if (idToken) {
           handleGoogleLogin(idToken);
+        } else {
+          Alert.alert('Error', 'No ID Token found in response URL');
         }
+      } else {
+        Alert.alert('Auth Cancelled', 'Session type: ' + result.type);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Google Login Error:', e);
+      Alert.alert('Login Error', e.message || 'Unknown error');
     }
   };
 

@@ -55,8 +55,9 @@ export const useAuth = () => {
       } else {
         setError(result.error || 'התחברות עם גוגל נכשלה&rlm;');
       }
-    } catch (e) {
-      setError('שגיאת תקשורת עם השרת&rlm;');
+    } catch (e: any) {
+      console.error('Google Login Error:', e);
+      setError('שגיאת תקשורת עם השרת: ' + (e.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
