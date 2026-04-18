@@ -17,15 +17,17 @@ Write-Host "Linking node_modules..."
 cmd /c mklink /J "$tempDir\node_modules" "$source\node_modules"
 
 Set-Location "$tempDir"
-$env:EAS_NO_GIT="1"
-$env:EAS_SKIP_FILENAMES_CASING_CHECK="1"
-$env:EAS_SKIP_AUTO_FINGERPRINT="1"
+git init
+git config user.email "test@example.com"
+git config user.name "Test User"
+git add .
+git commit -m "temp build"
 
 Write-Host "Fixing file attributes (removing Read-Only)..."
 Get-ChildItem -Path app, src, assets -Recurse | ForEach-Object { $_.Attributes = $_.Attributes -band (-not [System.IO.FileAttributes]::ReadOnly) }
 
-Write-Host "Starting EAS build (No Git mode)..."
-eas build -p android --profile preview --non-interactive
+Write-Host "Starting EAS build..."
+eas build -p android --profile preview
 
 Write-Host "Cleanup..."
 Set-Location "$source"
