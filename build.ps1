@@ -1,26 +1,32 @@
-$junctionPath = "C:\Users\Lenovo\Desktop\App\TaskFlow_Mobile_Link"
-$sourcePath = "C:\Users\Lenovo\Desktop\App\TaskFlow AI\mobile"
+$tempDir = "C:\Users\Lenovo\Desktop\App\TaskFlow_Build_Final"
+$source = "C:\Users\Lenovo\Desktop\App\TaskFlow AI\mobile"
 
-# Clean up existing link if any
-if (Test-Path $junctionPath) {
-    # On Windows, Remove-Item on a junction just removes the link
-    cmd /c rmdir "$junctionPath"
+if (Test-Path $tempDir) { 
+    Write-Host "Cleaning up..."
+    if (Test-Path "$tempDir\node_modules") {
+        cmd /c rmdir "$tempDir\node_modules"
+    }
+    Remove-Item -Recurse -Force $tempDir 
 }
+New-Item -ItemType Directory -Path $tempDir
 
-Write-Host "Creating directory junction to bypass space-in-path issue..."
-cmd /c mklink /J "$junctionPath" "$sourcePath"
+Write-Host "Copying files..."
+robocopy "$source" "$tempDir" /E /XD node_modules .git .expo android ios bin obj /NFL /NDL /NJH /NJS /nc /ns /np
 
-if (-not (Test-Path $junctionPath)) {
-    Write-Error "Failed to create junction. Please ensure you have permissions."
-    exit 1
-}
+Write-Host "Linking node_modules..."
+cmd /c mklink /J "$tempDir\node_modules" "$source\node_modules"
 
-Write-Host "Starting EAS build from space-free path..."
-Set-Location "$junctionPath"
+Set-Location "$tempDir"
+$env:EAS_NO_GIT="1"
+$env:EAS_SKIP_FILENAMES_CASING_CHECK="1"
+$env:EAS_SKIP_AUTO_FINGERPRINT="1"
 
-# We use the original git state but through the junction path
+Write-Host "Starting EAS build (No Git mode)..."
 eas build -p android --profile preview --non-interactive
 
-Write-Host "Build command finished. Cleaning up link..."
-Set-Location "$sourcePath"
-cmd /c rmdir "$junctionPath"
+Write-Host "Cleanup..."
+Set-Location "$source"
+if (Test-Path "$tempDir\node_modules") { 
+    cmd /c rmdir "$tempDir\node_modules" 
+}
+Remove-Item -Recurse -Force $tempDir
