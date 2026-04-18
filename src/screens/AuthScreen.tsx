@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -19,6 +19,7 @@ import { Mail, Lock, User, ArrowLeft, Zap, Globe } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import api from '../services/api';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -38,8 +39,28 @@ export default function AuthScreen() {
     error, 
     handleAuth, 
     handleGoogleLogin,
-    toggleMode 
+    toggleMode,
+    error: authError
   } = useAuth();
+
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+
+  const testConnection = async () => {
+    setTestStatus('testing');
+    try {
+      console.log('Testing connection to:', api.defaults.baseURL);
+      // Try to reach the profile endpoint (should return 401 but it's fine)
+      const response = await api.get('/bridge/auth/profile').catch(e => e.response || e);
+      setTestStatus('success');
+      Alert.alert('Connection Success', `Successfully reached: ${api.defaults.baseURL}\nStatus: ${response.status || 'No status'}`);
+    } catch (err: any) {
+      setTestStatus('error');
+      Alert.alert('Connection Failed', 
+        `Could not reach: ${api.defaults.baseURL}\n\nError: ${err.message}\n\n` +
+        `Tips:\n1. Same WiFi?\n2. Firewall open?\n3. IP correct?`
+      );
+    }
+  };
 
   const handleGoogleLoginPress = async () => {
     try {
@@ -209,6 +230,17 @@ export default function AuthScreen() {
               <LinearGradient colors={['rgba(255,255,255,0.03)', 'transparent']} className="absolute inset-0" />
               <Globe color="#e2e8f0" size={18} />
               <Text className="text-text-main text-[15px] font-black tracking-tight">התחברות עם Google</Text>
+            </TouchableOpacity>
+
+            {/* Network Diagnostic Tool */}
+            <TouchableOpacity 
+              onPress={testConnection}
+              style={{ marginTop: 20, opacity: 0.4 }}
+              className="items-center py-2 border border-white/5 rounded-inner"
+            >
+              <Text className="text-gray-400 text-[10px] font-bold tracking-widest uppercase">
+                {testStatus === 'testing' ? 'בדיקת חיבור...' : `בדיקת תקשורת: ${api.defaults.baseURL}`}
+              </Text>
             </TouchableOpacity>
           </View>
 
