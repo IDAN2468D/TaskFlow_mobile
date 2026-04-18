@@ -42,8 +42,11 @@ export default function AuthScreen() {
 
   const handleGoogleLoginPress = async () => {
     try {
-      // 1. The local return URL for Expo Go
-      const returnUrl = makeRedirectUri();
+      // 1. The local return URL for Expo Go and APK
+      const returnUrl = makeRedirectUri({ 
+        scheme: 'taskflow-ai',
+        path: 'oauthredirect' 
+      });
 
       // 2. The proxy redirect URL that Google is allowed to redirect to
       const proxyRedirectUri = 'https://auth.expo.io/@kazam11/mobile';
