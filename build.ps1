@@ -21,6 +21,9 @@ $env:EAS_NO_GIT="1"
 $env:EAS_SKIP_FILENAMES_CASING_CHECK="1"
 $env:EAS_SKIP_AUTO_FINGERPRINT="1"
 
+Write-Host "Fixing file attributes (removing Read-Only)..."
+Get-ChildItem -Path app, src, assets -Recurse | ForEach-Object { $_.Attributes = $_.Attributes -band (-not [System.IO.FileAttributes]::ReadOnly) }
+
 Write-Host "Starting EAS build (No Git mode)..."
 eas build -p android --profile preview --non-interactive
 
