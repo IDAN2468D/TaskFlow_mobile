@@ -46,7 +46,7 @@ export default function AuthScreen() {
       const returnUrl = makeRedirectUri();
 
       // 2. The proxy redirect URL that Google is allowed to redirect to
-      const proxyRedirectUri = 'https://auth.expo.io/@idankzm/mobile';
+      const proxyRedirectUri = 'https://auth.expo.io/@kazam11/mobile';
 
       // 3. The actual Google Auth URL
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
@@ -57,7 +57,7 @@ export default function AuthScreen() {
         `nonce=${Math.random().toString(36).substring(7)}`;
 
       // 4. Wrap everything in the Expo Proxy Start URL
-      const proxyStartUrl = `https://auth.expo.io/@idankzm/mobile/start?` + 
+      const proxyStartUrl = `https://auth.expo.io/@kazam11/mobile/start?` + 
         `authUrl=${encodeURIComponent(googleAuthUrl)}&` + 
         `returnUrl=${encodeURIComponent(returnUrl)}`;
 

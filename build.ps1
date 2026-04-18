@@ -1,5 +1,5 @@
 $tempDir = "C:\Users\Lenovo\Desktop\App\TaskFlow_Build_Final"
-$source = "C:\Users\Lenovo\Desktop\App\TaskFlow AI\mobile"
+$source = "C:\Users\Lenovo\Desktop\App\TaskFlowAI\mobile"
 
 if (Test-Path $tempDir) { 
     Write-Host "Cleaning up..."
